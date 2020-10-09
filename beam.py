@@ -145,7 +145,7 @@ class Beam(object):
                     # make empty again when no image was found
                     fits_name = ''
                     continue
-            if fits_name = '':
+            if fits_name == '':
                 #failed to find image. Note this and print warning
                 self.status = False
                 ("No continuum image found on ALTA for "
