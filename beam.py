@@ -24,12 +24,12 @@ from astropy.io import ascii
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-#stole from mosaic code, used for subprocess call checking
-FNULL = open(os.devnull, 'w')
+
 
 class Beam(object):
 
-
+    #stole from mosaic code, used for subprocess call checking
+    FNULL = open(os.devnull, 'w')
     
     def __init__(self,
                  taskid,
