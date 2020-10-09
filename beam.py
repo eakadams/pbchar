@@ -159,9 +159,7 @@ class Beam(object):
                 if not os.path.exists(self.workingdir):
                     os.makedirs(self.workingdir)
                 #check if file is already there
-                print(fits_name)
                 self.fitspath = os.path.join(self.workingdir,fits_name)
-                print(self.fitspath)
                 if not os.path.exists(self.fitspath):
                     #copy continuum image to this directory
                     return_msg = self.get_data_from_alta(alta_fits_path,
@@ -221,7 +219,7 @@ class Beam(object):
 
         # get the file from alta
         alta_cmd = ("iget -rfPIT -X {0} --lfrestart {1} "
-                    "--retries 5 {2} {3}/").format(
+                    "--retries 5 {2} {3}").format(
                         irods_status_file, irods_status_lf_file,
                         alta_file_name, output_path)
         return_msg = subprocess.check_call(
