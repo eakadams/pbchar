@@ -30,8 +30,8 @@ class Beam(object):
     def __init__(self,
                  taskid,
                  beam,
-                 pbdir = '/tank/apertif/driftscans/DR1/190912/continuum'
-                 pbname = '190912'
+                 pbdir = '/tank/apertif/driftscans/DR1/190912/continuum',
+                 pbname = '190912',
                  outputdir = '/tank/adams/pbchar/',
                  workingdir = '/tank/adams/pbchar/tmp/',
                  skipcheck = False):
