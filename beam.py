@@ -49,7 +49,7 @@ class Beam(object):
         """
         #add initial values
         self.taskid = str(taskid)
-        self.beam = '{}'.format(beam.zfill(2))
+        self.beam = '{:02d}'.format(beam)
         self.pbdir = pbdir
         self.pbname = pbname
 
