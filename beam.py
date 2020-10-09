@@ -61,7 +61,6 @@ class Beam(object):
         #should include info about PBs being used and beam
         #taskids go in file names
         self.outputdir = os.path.join(outputdir,self.pbname,self.beam)
-        print(self.outputdir)
 
         #working dir
         self.workingdir = workingdir
@@ -161,7 +160,7 @@ class Beam(object):
                     os.makedirs(self.workingdir)
                 #check if file is already there
                 self.fitspath = os.path.join(self.workingdir,fits_name)
-                if not os.path.exists(fitspath):
+                if not os.path.exists(self.fitspath):
                     #copy continuum image to this directory
                     return_msg = self.getdata_from_alta(alta_fits_path,
                                                         self.fitspath)
