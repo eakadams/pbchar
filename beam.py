@@ -162,7 +162,7 @@ class Beam(object):
                 self.fitspath = os.path.join(self.workingdir,fits_name)
                 if not os.path.exists(self.fitspath):
                     #copy continuum image to this directory
-                    return_msg = self.getdata_from_alta(alta_fits_path,
+                    return_msg = self.get_data_from_alta(alta_fits_path,
                                                         self.fitspath)
                     if return_msg != 0.0:
                         print(("Failed to retrieve continuum "
