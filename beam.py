@@ -55,7 +55,8 @@ class Beam(object):
 
         #setup output locations
         #should include info about PBs being used....
-        self.outputdir = os.path.join(outputdir,pbname,beam,taskid)
+        self.outputdir = os.path.join(outputdir,self.pbname,
+                                      self.beam,self.taskid)
         print(self.outputdir)
 
         #working dir
