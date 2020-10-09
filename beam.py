@@ -24,9 +24,13 @@ from astropy.io import ascii
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-
+#stole from mosaic code, used for subprocess call checking
+FNULL = open(os.devnull, 'w')
 
 class Beam(object):
+
+
+    
     def __init__(self,
                  taskid,
                  beam,
@@ -54,9 +58,9 @@ class Beam(object):
         self.pbname = pbname
 
         #setup output locations
-        #should include info about PBs being used....
-        self.outputdir = os.path.join(outputdir,self.pbname,
-                                      self.beam,self.taskid)
+        #should include info about PBs being used and beam
+        #taskids go in file names
+        self.outputdir = os.path.join(outputdir,self.pbname,self.beam)
         print(self.outputdir)
 
         #working dir
