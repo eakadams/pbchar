@@ -38,7 +38,8 @@ class Beam(object):
                  pbname = '190912',
                  outputdir = '/tank/adams/pbchar/',
                  workingdir = '/tank/adams/pbchar/tmp/',
-                 skipcheck = False):
+                 skipcheck = False,
+                 masklevel = None):
         """
         Initialize Beam object
         Inputs:
@@ -50,12 +51,21 @@ class Beam(object):
                      default is personal space on happili-05
         - workingdir: Path for writing files as part of process
         - skipcheck: Can skip checking for output to force a rerun
+        - masklevel: Level at which to mask image after PB correction; 
+                     e.g. 0.2 for 20% of PB response
+                     default is None
         """
         #add initial values
         self.taskid = str(taskid)
         self.beam = '{:02d}'.format(beam)
         self.pbdir = pbdir
         self.pbname = pbname
+        #check that masklevel is a float
+        if type(masklevel) is float:
+            self.masklevel = masklevel
+        else:
+            self.masklevel = None
+            print("Mask level not a float; no masking will be done")
 
         #setup output locations
         #should include info about PBs being used and beam
@@ -341,6 +351,28 @@ class Beam(object):
         Apply primary beam correction using immath
         """
         #do PB correction
+        #define output
+        self.pbsmimpath = os.path.join(self.workingdir,"sm_pb")
+        #check that regridded PB image and smoothed cont image exist
+        #also that output doesn't
+        if (os.path.isdir(self.smimpath) and
+            os.path.isdir(self.pbpath) and
+            not os.path.isdir(self.pbsmimpath)):
+            maths = lib.miriad('maths')
+            maths.exp = self.smimpath / self.pbpath
+            maths.out = self.pbsmimpath
+            #add a mask at set level of PB response
+            if self.masklevel is not None:
+                #add a mask
+                maths.mask = "'{0}'.gt.{1}".format(self.pbath,self.masklevel)
+            try:
+                maths.go()
+            except Exception as e:
+                self.status = False
+                print(("Primary beam correction failed for "
+                       "beam {0}, taskid {1}").format(self.beam,self.taskid))
+                
+            
 
         #add something like self.pbsmimpath
 
