@@ -125,7 +125,6 @@ class Beam(object):
             self.record()
             self.clean_up()
             
-
     def check(self):
         """
         Do a check to see if beam has already been run
@@ -366,7 +365,7 @@ class Beam(object):
             #add a mask at set level of PB response
             if self.masklevel is not None:
                 #add a mask
-                maths.mask = "'{0}'.gt.{1}".format(self.pbath,self.masklevel)
+                maths.mask = "'{0}'.gt.{1}".format(self.pbpath,self.masklevel)
             try:
                 maths.go()
             except Exception as e:
