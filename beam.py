@@ -63,7 +63,10 @@ class Beam(object):
         self.outputdir = os.path.join(outputdir,self.pbname,self.beam)
 
         #working dir
-        self.workingdir = workingdir
+        #needs to have taskid/beam in case I run things in parallel
+        #want to be able to clean up working dir at end and not
+        #worry about writing conflicts
+        self.workingdir = os.path.join(workingdir,self.taskid,self.beam)
 
         #setup a status
         #can query to see if steps should be run
@@ -173,10 +176,10 @@ class Beam(object):
         #now, as long as status is good, convert to miriad
         if self.status is True:
             #set miriad image path
-            #keep it short because of string length issues
-            #means will have to be good about doing cleanup!
+            #keep name short because of string length issues
+            #m for "map"
             self.impath = os.path.join(self.workingdir,
-                                       ("image_{0}.map").
+                                       ("m").
                                        format(self.beam))
             #check that miriad image doesn't already exist and do conversion
             if not os.path.isdir(self.impath):
