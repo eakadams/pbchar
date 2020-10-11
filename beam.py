@@ -241,7 +241,7 @@ class Beam(object):
             if not os.path.isdir(self.smimpath):
                 #do convolution
                 convol = lib.miriad('convol')
-                convol.map_ = self.impath
+                convol.map = self.impath
                 convol.out = self.smimpath
                 convol.fwhm = '45,45' #NVSS resolution
                 convol.options = 'final'
