@@ -359,7 +359,7 @@ class Beam(object):
             os.path.isdir(self.pbpath) and
             not os.path.isdir(self.pbsmimpath)):
             maths = lib.miriad('maths')
-            maths.exp = self.smimpath / self.pbpath
+            maths.exp = "'{0}'/'{1}'".format(self.smimpath, self.pbpath)
             maths.out = self.pbsmimpath
             #add a mask at set level of PB response
             if self.masklevel is not None:
