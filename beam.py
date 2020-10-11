@@ -248,7 +248,7 @@ class Beam(object):
                 try:
                     convol.go()
                 except Exception as e:
-                    print(e)
+                    #print(e)
                     self.status = False
                     print(("Convoling beam {0} of taskid {1} failed").
                           format(self.beam,self.taskid))                    
@@ -263,12 +263,73 @@ class Beam(object):
         Convert PB image to miriad in working directory
         Regrid image
         """
+        #first get PB image and write to miriad in workingdir
+        #naming convention might depend on type of PB image
+        #drift, Alexander's method, etc
+        #check if drift
+        if len(self.pbname) == 6:
+            #YYMMDD name used for driftscans
+            pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
+                                  format(self.pbname,self.beam))
+            #may have to add a check about string length, but wait until it's a problem
 
-        #check if working directory exists, make if needed
+        #having defined pbfits above,
+        #check it exists, retrieve to miriad in workingdir
+        if os.path.exists(pbfits):
+            #get pbimage to miriad
+            pbim = os.path.join(self.workingdir,"pb")
+            fits = lib.miriad('fits')
+            fits.op = 'xyin'
+            fits.in_ = pbfits
+            fits.out = pbim
+            try:
+                fits.go()
+            except Exception as e:
+                self.status = False
+                print(("Conversion to miriad image failed "
+                       "for primary beam {0}").
+                          format(self.beam))
+
+        ####get projection center of continuum image for regridding
+        ###if os.path.isdir(self.smimpath):
+        ###    gethd = lib.miriad('gethd')
+        ###    gethd.in_ = os.path.join(self.smimpath,'crval1')
+        ###    gethd.format = 'hms'
+        ###    ra_ref = gethd.go()
+        ###    gethd.in_ = os.path.join(self.smimpath,'crval2')
+        ###    gethd.format = 'dms'
+        ###    dec_ref = gethd.go()
+        ###else:
+        ###    #getting projection center of (smoothed) image failed
+        ###    #could try regular image but sign something is wrong
+        ###    ra_ref = None
+        ###    dec_ref = None
+        ###    self.status = False
 
         #regrid image
+        #define out put, pbr - PB R egridded
+        self.pbpath = os.path.join(self.workingdir,'pbr')
+        #check it exists for regridding
+        #plus smoothed path for template
+        if os.path.isdir(pbim) and os.path.isdir(self.smimpath):
+            regrid = lib.miriad('regrid')
+            regrid.in_ = pbim
+            regrid.out = self.pbpath
+            regrid.tin = self.smimpath
+            regrid.axes = '1,2'
+            try:
+                regrid.go()
+            except Exception as e:
+                self.status = False
+                print(("Regridding failed for primary beam {0},"
+                       "reference taskid {1}").format(self.beam,self.taskid))
+        else:
+            self.status = False
+            print(("Either primary beam or smoothed continuum "
+                   "image missing for beam {0}, taskid{1}").
+                  format(self.beam,self.taskid))
+            
 
-        #add something like self.pbbath
 
 
     def do_pb():
