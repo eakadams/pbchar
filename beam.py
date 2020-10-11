@@ -262,7 +262,7 @@ class Beam(object):
             self.smimpath = None
         
 
-    def regrid_pb():
+    def regrid_pb(self):
         """
         Convert PB image to miriad in working directory
         Regrid image
@@ -336,7 +336,7 @@ class Beam(object):
 
 
 
-    def do_pb():
+    def do_pb(self):
         """
         Apply primary beam correction using immath
         """
@@ -345,7 +345,7 @@ class Beam(object):
         #add something like self.pbsmimpath
 
 
-    def find_sources():
+    def find_sources(self):
         """
         Find sources in smoothed & pb-corrected image
         Write them to a temp file in working directory
@@ -355,7 +355,7 @@ class Beam(object):
         #if I can keep sources in a Table add add that to ibject
         #that would also be great
 
-    def get_nvss():
+    def get_nvss(self):
         """
         Get NVSS sources
         """
@@ -368,7 +368,7 @@ class Beam(object):
 
         #add something like self.nvss_sources which is table
 
-    def cross_match():
+    def cross_match(self):
         """
         Do the cross-matching
         Apply filters based on:
@@ -379,7 +379,7 @@ class Beam(object):
 
         #add something like self.matches which is a table of matches
 
-    def record():
+    def record(self):
         """
         Write out matches to text files for later access
         Format is something like:
@@ -393,7 +393,7 @@ class Beam(object):
 
         #write out files
 
-    def clean_up():
+    def clean_up(self):
         """
         Clean up any temporary files
         This will be:

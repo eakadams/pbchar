@@ -1,11 +1,19 @@
 #command line code for testing
 
+from __future__ import print_function
+
 import beam as beam
 
+print("Load Beam object; 190807041, 1")
 B = beam.Beam(190807041,1)
 
+print("Get cont image")
 B.get_cont_image()
 
+print("Smooth cont image")
 B.convolve()
 
+print("Get and regrid PB")
 B.regrid_pb()
+
+print("Test done")
