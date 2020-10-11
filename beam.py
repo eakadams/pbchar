@@ -178,9 +178,7 @@ class Beam(object):
             #set miriad image path
             #keep name short because of string length issues
             #m for "map"
-            self.impath = os.path.join(self.workingdir,
-                                       ("m").
-                                       format(self.beam))
+            self.impath = os.path.join(self.workingdir,"m")
             #check that miriad image doesn't already exist and do conversion
             if not os.path.isdir(self.impath):
                 fits = lib.miriad('fits')
@@ -235,9 +233,28 @@ class Beam(object):
         """
         Convolve to NVSS resolution
         """
-        #do convolution
-
-        #add something like self.smimpath
+        #check that image exists
+        if os.path.isdir(self.impath):
+            #define output path
+            self.smimpath = os.path.join(self.workingdir,"sm")
+            #check that output doesn't exist
+            if not os.path.isdir(self.smimpath):
+                #do convolution
+                convol = lib.miriad('convol')
+                convol.map_ = self.impath
+                convol.out = self.smimpath
+                convol.fwhm = '45,45' #NVSS resolution
+                convol.options = 'final'
+                try:
+                    convol.go()
+                except Exception as e:
+                    self.status = False
+                    print(("Convoling beam {0} of taskid {1} failed").
+                          format(self.beam,self.taskid))                    
+        else:
+            #image to convolve doesn't exist
+            self.status = False
+            self.smimpath = None
         
 
     def regrid_pb():
