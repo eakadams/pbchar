@@ -248,6 +248,7 @@ class Beam(object):
                 try:
                     convol.go()
                 except Exception as e:
+                    print(e)
                     self.status = False
                     print(("Convoling beam {0} of taskid {1} failed").
                           format(self.beam,self.taskid))                    
