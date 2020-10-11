@@ -163,7 +163,7 @@ class Beam(object):
                     os.makedirs(self.workingdir)
                 #check if file is already there
                 self.fitspath = os.path.join(self.workingdir,fits_name)
-                pritn(self.fitspath)
+                print(self.fitspath)
                 if not os.path.exists(self.fitspath):
                     #copy continuum image to this directory
                     return_msg = self.get_data_from_alta(alta_fits_path,
