@@ -78,6 +78,17 @@ class Beam(object):
         #worry about writing conflicts
         self.workingdir = os.path.join(workingdir,self.taskid,self.beam)
 
+        #define paths I will want later
+        self.fitspath = None #can only define this when know image name
+        #m for "map"
+        self.impath = os.path.join(self.workingdir,"m")
+        #sm for "SMoothed Map"
+        self.smimpath = os.path.join(self.workingdir,"sm")
+        #pbr for "Primary Beam Regridded
+        self.pbpath = os.path.join(self.workingdir,'pbr')
+        #sm_pb for "SMoothed and PB corrected"
+        self.pbsmimpath = os.path.join(self.workingdir,"sm_pb")
+
         #setup a status
         #can query to see if steps should be run
         #also useful output if things were successful overall
@@ -188,11 +199,6 @@ class Beam(object):
         #change to check fitspath exist
         #setting status but not really using now
         if os.path.exists(self.fitspath):
-            #self.status is True:
-            #set miriad image path
-            #keep name short because of string length issues
-            #m for "map"
-            self.impath = os.path.join(self.workingdir,"m")
             #check that miriad image doesn't already exist and do conversion
             if not os.path.isdir(self.impath):
                 fits = lib.miriad('fits')
@@ -248,9 +254,7 @@ class Beam(object):
         Convolve to NVSS resolution
         """
         #check that image exists
-        if os.path.isdir(self.impath):
-            #define output path
-            self.smimpath = os.path.join(self.workingdir,"sm")
+        if os.path.isdir(self.impath):    
             #check that output doesn't exist
             if not os.path.isdir(self.smimpath):
                 #do convolution
@@ -322,7 +326,7 @@ class Beam(object):
 
         #regrid image
         #define out put, pbr - PB R egridded
-        self.pbpath = os.path.join(self.workingdir,'pbr')
+        
         #check it exists for regridding
         #plus smoothed path for template
         if os.path.isdir(pbim) and os.path.isdir(self.smimpath):
@@ -351,8 +355,6 @@ class Beam(object):
         Apply primary beam correction using immath
         """
         #do PB correction
-        #define output
-        self.pbsmimpath = os.path.join(self.workingdir,"sm_pb")
         #check that regridded PB image and smoothed cont image exist
         #also that output doesn't
         if (os.path.isdir(self.smimpath) and
