@@ -163,6 +163,7 @@ class Beam(object):
                     os.makedirs(self.workingdir)
                 #check if file is already there
                 self.fitspath = os.path.join(self.workingdir,fits_name)
+                pritn(self.fitspath)
                 if not os.path.exists(self.fitspath):
                     #copy continuum image to this directory
                     return_msg = self.get_data_from_alta(alta_fits_path,
@@ -174,7 +175,10 @@ class Beam(object):
                         self.status = False
 
         #now, as long as status is good, convert to miriad
-        if self.status is True:
+        #change to check fitspath exist
+        #setting status but not really using now
+        if os.path.exists(self.fitspath):
+            #self.status is True:
             #set miriad image path
             #keep name short because of string length issues
             #m for "map"
