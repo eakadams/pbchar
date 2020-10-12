@@ -363,8 +363,8 @@ class Beam(object):
             puthd.type = 'double'
             puthd.go()
             #keep ra & dec in object; will need later
-            self.ra = ra_ref
-            self.dec = dec_ref
+            self.ra = ra_ref * u.rad
+            self.dec = dec_ref * u.rad
         else:
             #getting projection center of (smoothed) image failed
             self.status = False
@@ -513,10 +513,9 @@ class Beam(object):
                               'MajAxis','MinAxis'],
                    row_limit = -1,
                    column_filters = {"MajAxis":"<50", "MinAxis":"<50"})
-        print(self.ra,self.dec)
+        print(self.ra.to(u.deg).value,self.dec.to(u.deg).value)
         result = v.query_region(SkyCoord(ra=self.ra, dec=self.dec,
-                                              unit=(u.deg, u.deg),
-                                              frame='icrs'),
+                                         frame='icrs'),
                                 radius=60*u.arcmin,
                                 catalog=nvsscat)
         #print(result)
