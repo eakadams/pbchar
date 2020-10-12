@@ -14,15 +14,15 @@ everything.
 import os
 import subprocess
 import bdsf
-
+from astroquery.vizier import Vizier
 from apercal.libs import lib
+from astropy.coordinates import SkyCoord
 
 import glob
 import sys
 from astropy.table import Table
 import numpy as np
 from astropy.io import ascii
-from astropy.coordinates import SkyCoord
 from astropy import units as u
 
 
@@ -104,6 +104,10 @@ class Beam(object):
         #but not for now while testing
         self.bdsf_file = os.path.join(self.workingdir,"bdsf.sav")
         self.bdsf_output = os.path.join(self.workingdir,"bdsf_output.srl")
+
+        #variables for RA, Dec of center of image
+        self.ra = None
+        self.dec = None
         
         #setup a status
         #can query to see if steps should be run
@@ -353,7 +357,10 @@ class Beam(object):
             puthd.in_ = os.path.join(pbim,'crval2')
             puthd.value = dec_ref[0]
             puthd.type = 'double'
-            puthd.go()           
+            puthd.go()
+            #keep ra & dec in object; will need later
+            self.ra = ra_ref
+            self.dec = dec_ref
         else:
             #getting projection center of (smoothed) image failed
             self.status = False
@@ -491,13 +498,21 @@ class Beam(object):
     def get_nvss(self):
         """
         Get NVSS sources
+        Using astroquery Vizier functionality
         """
-
-        #have to decide whether it's better to query
-        #or have catalog locally
-        #probablyb etter to  query because then it's smaller
-        #for source matching
-        #and I like idea of using tools for querying
+        #NVSS catalog identifier
+        nvsscat = 'VIII/65/nvss'
+        #get rid of row limit
+        Vizier.ROW_LIMIT = -1
+        #get sky coord of cont image
+        
+        result = Vizier.query_region(SkyCoord(ra=self.ra, dec=self.dec,
+                                              unit=(u.deg, u.deg),
+                                              frame='icrs'),
+                                     radius=60*u.arcmin,
+                                     catalog=nvsscat)
+        print(result)
+        
 
         #add something like self.nvss_sources which is table
 
