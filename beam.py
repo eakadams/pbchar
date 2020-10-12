@@ -318,7 +318,7 @@ class Beam(object):
         #is this the right thing to do?
         #check w/ Thijs & Helga.....
         if (os.path.isdir(self.smimpath)):
-            #and
+            and
             os.path.isdir(pbim)):
             #get center values
             gethd = lib.miriad('gethd')
