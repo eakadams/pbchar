@@ -537,6 +537,27 @@ class Beam(object):
         bdsf_sources = ascii.read(self.bdsf_output,guess=True,
                                   data_start=5,header_start=4)
         print(bdsf_sources.colnames)
+
+        #initialize empty lists to hold output from successful cross-matches
+        flux_ap = []
+        flux_nvss = []
+        raD = [] #RA different Ap - NVSS
+        deD = [] #Dec difference; Apertif - NVSS
+        deltara = [] #delta RA (Apertif) from image center
+        deltadec = [] #delta dec (Apertif) from image center
+        radius = [] #distance from field center
+
+        #get NVSS skycoord object
+        nvss_coords = SkyCoord(ra=self.nvss_table['RAJ2000'],
+                               dec=self.nvss_table['DEJ2000'],
+                               frame='icrs')
+        print(nvss_coords[0:10])
+        
+        #iterate through every Apertif sources
+        for i in range(len(bdsf_sources)):
+            pass
+            
+        
         #add something like self.matches which is a table of matches
 
     def record(self):
