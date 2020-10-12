@@ -320,10 +320,10 @@ class Beam(object):
             #get center values
             gethd = lib.miriad('gethd')
             gethd.in_ = os.path.join(self.smimpath,'crval1')
-            gethd.format = 'hms'
+            #gethd.format = 'hms'
             ra_ref = gethd.go()
             gethd.in_ = os.path.join(self.smimpath,'crval2')
-            gethd.format = 'dms'
+            #gethd.format = 'dms'
             dec_ref = gethd.go()
             #update center
             puthd = lib.miriad('puthd')
