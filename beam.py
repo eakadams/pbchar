@@ -390,7 +390,7 @@ class Beam(object):
             #add a mask at set level of PB response
             if self.masklevel is not None:
                 #add a mask
-                maths.mask = "'<{0}>.gt.<{1}>'".format(self.pbpath,self.masklevel)
+                maths.mask = "'<{0}>.gt.{1}'".format(self.pbpath,self.masklevel)
                 print(maths.mask)
             try:
                 maths.go()
