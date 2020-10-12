@@ -363,8 +363,8 @@ class Beam(object):
             puthd.type = 'double'
             puthd.go()
             #keep ra & dec in object; will need later
-            self.ra = ra_ref * u.rad
-            self.dec = dec_ref * u.rad
+            self.ra = ra_ref[0] * u.rad
+            self.dec = dec_ref[0] * u.rad
         else:
             #getting projection center of (smoothed) image failed
             self.status = False
