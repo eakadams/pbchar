@@ -514,7 +514,8 @@ class Beam(object):
                    row_limit = -1,
                    column_filters = {"MajAxis":"<50", "MinAxis":"<50"})
         print(self.ra.to(u.deg),self.dec.to(u.deg))
-        result = v.query_region(SkyCoord(ra=self.ra, dec=self.dec,
+        result = v.query_region(SkyCoord(ra=self.ra.to(u.deg),
+                                         dec=self.dec.to(u.deg),
                                          frame='icrs'),
                                 radius=60*u.arcmin,
                                 catalog=nvsscat)
