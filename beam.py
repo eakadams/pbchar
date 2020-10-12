@@ -368,7 +368,7 @@ class Beam(object):
             dec_vals = self.get_hdr('dec',self.smimpath)
             desc = "{0},{1},{2},{3},{4},{5},{6},{7}".format(
                 ra_vals[0],ra_vals[1],ra_vals[2],ra_vals[3],
-                ,dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
+                dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
             try:
                 regrid.go()
             except Exception as e:
