@@ -548,17 +548,25 @@ class Beam(object):
         radius = [] #distance from field center
 
         #get NVSS skycoord object
-        print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
+        #print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
         nvss_coords = SkyCoord(ra=self.nvss_table['RAJ2000'],
                                dec=self.nvss_table['DEJ2000'],
                                frame='icrs',
                                unit=(u.hourangle,u.deg))
 
-        print(nvss_coords[0:10])
+        #print(nvss_coords[0:10])
         
         #iterate through every Apertif sources
         for i in range(len(bdsf_sources)):
-            pass
+            #get skycoord of source
+            source_coord = SkyCoord(ra=bdsf_sources['RA'][i],dec=bdsf_sources['DEC'][i],
+                                    unit=(u.deg,u.deg))
+            #get closest match in NVSS catalog
+            idx, sep2d, dist3d = source_coord.match_to_catalog_sky(nvss_coords)
+            #check if separation is w/in 5"
+            if sep2d < 5*u.arcsec:
+                print("have a match, offset is {}".format(sep2d))
+            
             
         
         #add something like self.matches which is a table of matches
