@@ -211,6 +211,7 @@ class Beam(object):
                     print(("Conversion to miriad image failed "
                            "for beam {0} of taskid {1}").
                           format(self.beam,self.taskid))
+                    print(e)
 
     def check_alta_path(self,alta_path):
         """
@@ -268,7 +269,8 @@ class Beam(object):
                     #print(e)
                     self.status = False
                     print(("Convoling beam {0} of taskid {1} failed").
-                          format(self.beam,self.taskid))                    
+                          format(self.beam,self.taskid))
+                    print(e)
         else:
             #image to convolve doesn't exist
             self.status = False
@@ -306,6 +308,7 @@ class Beam(object):
                 print(("Conversion to miriad image failed "
                        "for primary beam {0}").
                           format(self.beam))
+                print(e)
 
         ####get projection center of continuum image for regridding
         ###if os.path.isdir(self.smimpath):
@@ -340,6 +343,7 @@ class Beam(object):
                 self.status = False
                 print(("Regridding failed for primary beam {0},"
                        "reference taskid {1}").format(self.beam,self.taskid))
+                print(e)
         else:
             self.status = False
             print(("Either primary beam or smoothed continuum "
@@ -372,6 +376,7 @@ class Beam(object):
                 self.status = False
                 print(("Primary beam correction failed for "
                        "beam {0}, taskid {1}").format(self.beam,self.taskid))
+                print(e)
                 
             
 
