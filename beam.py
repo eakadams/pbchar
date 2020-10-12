@@ -522,6 +522,7 @@ class Beam(object):
         self.nvss_table = result[nvsscat]
         print(self.nvss_table.colnames)
 
+        print(self.nvss_table['MajAxis','MinAxis'])
         #add something like self.nvss_sources which is table
 
     def cross_match(self):
