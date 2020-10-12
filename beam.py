@@ -508,7 +508,7 @@ class Beam(object):
         #get rid of row limit
         Vizier.ROW_LIMIT = -1
         #get sky coord of cont image
-        v = Vizier(columns = ['RAJ2000','DEJ2000','S1.4','e_S1.4',
+        v = Vizier(columns = ['NVSS','RAJ2000','DEJ2000','S1.4','e_S1.4',
                               'MajAxis','MinAxis'],
                    row_limit = -1)
         result = v.query_region(SkyCoord(ra=self.ra, dec=self.dec,
