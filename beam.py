@@ -368,14 +368,14 @@ class Beam(object):
             os.path.isdir(self.pbpath) and
             not os.path.isdir(self.pbsmimpath)):
             maths = lib.miriad('maths')
-            maths.exp = "'{0}' / '{1}'".format(self.smimpath, self.pbpath)
+            maths.exp = "{0} / {1}".format(self.smimpath, self.pbpath)
             maths.out = self.pbsmimpath
             print(maths.exp)
             print(maths.out)
             #add a mask at set level of PB response
             if self.masklevel is not None:
                 #add a mask
-                maths.mask = "'{0}'.gt.{1}".format(self.pbpath,self.masklevel)
+                maths.mask = "{0}.gt.{1}".format(self.pbpath,self.masklevel)
                 print(maths.mask)
             try:
                 maths.go()
