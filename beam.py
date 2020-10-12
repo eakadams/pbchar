@@ -548,9 +548,11 @@ class Beam(object):
         radius = [] #distance from field center
 
         #get NVSS skycoord object
+        print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
         nvss_coords = SkyCoord(ra=self.nvss_table['RAJ2000'],
                                dec=self.nvss_table['DEJ2000'],
                                frame='icrs')
+
         print(nvss_coords[0:10])
         
         #iterate through every Apertif sources
