@@ -543,8 +543,6 @@ class Beam(object):
         #initialize empty lists to hold output from successful cross-matches
         flux_ap = []
         flux_nvss = []
-        raD = [] #RA different Ap - NVSS
-        deD = [] #Dec difference; Apertif - NVSS
         deltara = [] #delta RA (Apertif) from image center
         deltadec = [] #delta dec (Apertif) from image center
         radius = [] #distance from field center
@@ -557,6 +555,11 @@ class Beam(object):
                                unit=(u.hourangle,u.deg))
 
         #print(nvss_coords[0:10])
+        #get center  iamge coord also
+        center_coord  = SkyCoord(ra=self.ra.to(u.deg),
+                                 dec=self.ra.to(u.deg),
+                                 unit=(u.deg,u.deg),
+                                 frame='icrs')
         
         #iterate through every Apertif sources
         for i in range(len(bdsf_sources)):
@@ -568,7 +571,17 @@ class Beam(object):
             #print(sep2d.to(u.arcsec).value)
             #check if separation is w/in 5"
             if sep2d  < 5*u.arcsec:
-                print("have a match, offset is {}".format(sep2d.to(u.arsec).value))
+                print("have a match, offset is {}".format(sep2d.to(u.arcsec).value))
+                #append values to list
+                flux_ap.append(bdsf_sources['Peak_flux'][i])
+                flux_nvss.append(self.nvss_table['S1.4'][idx])
+                d_ra, d_ec = center_coord.spherical_offsets_to(source_coord)
+                r = center_coord.separation(source_coord)
+                deltara.append(d_ra.to(u.arcsec).value)
+                deltadec.append(d_dec.to(u.arcsec).value)
+                radius.append(r.to(u.arcsec).value)
+
+        print(flux_ap,flux_nvss,radius)
             
             
         
