@@ -317,7 +317,7 @@ class Beam(object):
         #and update center of PB image manually
         #is this the right thing to do?
         #check w/ Thijs & Helga.....
-        if (os.path.isdir(self.smimpath)):
+        if (os.path.isdir(self.smimpath)
             and
             os.path.isdir(pbim)):
             #get center values
