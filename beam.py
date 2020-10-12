@@ -510,7 +510,8 @@ class Beam(object):
         #get sky coord of cont image
         v = Vizier(columns = ['NVSS','RAJ2000','DEJ2000','S1.4','e_S1.4',
                               'MajAxis','MinAxis'],
-                   row_limit = -1)
+                   row_limit = -1,
+                   column_filters = {"MajAxis":"<50", "MinAxis":"<50"})
         result = v.query_region(SkyCoord(ra=self.ra, dec=self.dec,
                                               unit=(u.deg, u.deg),
                                               frame='icrs'),
