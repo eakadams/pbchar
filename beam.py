@@ -574,7 +574,7 @@ class Beam(object):
                 print("have a match, offset is {}".format(sep2d.to(u.arcsec).value))
                 #append values to list
                 flux_ap.append(bdsf_sources['Peak_flux'][i])
-                flux_nvss.append(self.nvss_table['S1.4'][idx])
+                flux_nvss.append((self.nvss_table['S1.4'][idx])/1000.) #record in  Jy, match bdsf
                 d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
                 r = center_coord.separation(source_coord)
                 deltara.append(d_ra.to(u.arcsec).value)
