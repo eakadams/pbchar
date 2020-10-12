@@ -551,7 +551,8 @@ class Beam(object):
         print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
         nvss_coords = SkyCoord(ra=self.nvss_table['RAJ2000'],
                                dec=self.nvss_table['DEJ2000'],
-                               frame='icrs')
+                               frame='icrs',
+                               unit=(u.hourangle,u.deg))
 
         print(nvss_coords[0:10])
         
