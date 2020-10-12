@@ -557,7 +557,7 @@ class Beam(object):
         #print(nvss_coords[0:10])
         #get center  iamge coord also
         center_coord  = SkyCoord(ra=self.ra.to(u.deg),
-                                 dec=self.ra.to(u.deg),
+                                 dec=self.dec.to(u.deg),
                                  unit=(u.deg,u.deg),
                                  frame='icrs')
         
