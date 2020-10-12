@@ -17,12 +17,13 @@ import bdsf
 from astroquery.vizier import Vizier
 from apercal.libs import lib
 from astropy.coordinates import SkyCoord
+from astropy.io import ascii
 
 import glob
 import sys
 from astropy.table import Table
 import numpy as np
-from astropy.io import ascii
+
 from astropy import units as u
 
 
@@ -521,20 +522,20 @@ class Beam(object):
         #print(result[nvsscat])
 
         self.nvss_table = result[nvsscat]
-        print(self.nvss_table.colnames)
+        #print(self.nvss_table.colnames)
 
-        print(self.nvss_table['MajAxis','MinAxis'])
+        #print(self.nvss_table['MajAxis','MinAxis'])
         #add something like self.nvss_sources which is table
 
     def cross_match(self):
         """
         Do the cross-matching
-        Apply filters based on:
-        - flux?
-        - size?
-        - flux + PB location?
+        Filtered on size in retrieval above
+        Make sure coordiante are close
         """
-
+        #read in source list from pybdsf output
+        bdsf_sources = ascii.read(self.bdsf_output,format='ascii',guess=True)
+        print(bdsf_sources.colnames)
         #add something like self.matches which is a table of matches
 
     def record(self):
