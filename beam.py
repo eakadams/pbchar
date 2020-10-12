@@ -364,8 +364,8 @@ class Beam(object):
             #then my image is resize so things don't work later
             #what if I add desc value?
             #use helper function to get values
-            ra_vals = get_hdr('ra',self.smimpath)
-            dec_vals = get_hdr('dec',self.smimpath)
+            ra_vals = self.get_hdr('ra',self.smimpath)
+            dec_vals = self.get_hdr('dec',self.smimpath)
             desc = "{0},{1},{2},{3},{4},{5},{6},{7}".format(
                 ravals[0,1,2,3],decvals[0,1,2,3])
             try:
