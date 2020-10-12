@@ -534,7 +534,7 @@ class Beam(object):
         Make sure coordiante are close
         """
         #read in source list from pybdsf output
-        bdsf_sources = ascii.read(self.bdsf_output,format='ascii',guess=True)
+        bdsf_sources = ascii.read(self.bdsf_output,guess=True)
         print(bdsf_sources.colnames)
         #add something like self.matches which is a table of matches
 
