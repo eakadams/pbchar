@@ -311,21 +311,36 @@ class Beam(object):
                           format(self.beam))
                 print(e)
 
-        ####get projection center of continuum image for regridding
-        ###if os.path.isdir(self.smimpath):
-        ###    gethd = lib.miriad('gethd')
-        ###    gethd.in_ = os.path.join(self.smimpath,'crval1')
-        ###    gethd.format = 'hms'
-        ###    ra_ref = gethd.go()
-        ###    gethd.in_ = os.path.join(self.smimpath,'crval2')
-        ###    gethd.format = 'dms'
-        ###    dec_ref = gethd.go()
-        ###else:
-        ###    #getting projection center of (smoothed) image failed
-        ###    #could try regular image but sign something is wrong
-        ###    ra_ref = None
-        ###    dec_ref = None
-        ###    self.status = False
+        #get projection center of continuum image for regridding
+        #and update center of PB image manually
+        #is this the right thing to do?
+        #check w/ Thijs & Helga.....
+        if (os.path.isdir(self.smimpath) and
+            os.path.isdir(pbim)):
+            #get center values
+            gethd = lib.miriad('gethd')
+            gethd.in_ = os.path.join(self.smimpath,'crval1')
+            gethd.format = 'hms'
+            ra_ref = gethd.go()
+            gethd.in_ = os.path.join(self.smimpath,'crval2')
+            gethd.format = 'dms'
+            dec_ref = gethd.go()
+            #update center
+            puthd = lib.miriad('puthd')
+            puthd.in_ = os.path.join(pbim,'crval1')
+            puthd.value = ra_ref[0]
+            puthd.type = 'double'
+            puthd.go()
+            puthd.in_ = os.path.join(pbim,'crval2')
+            puthd.value = dec_ref[0]
+            puthd.type = 'double'
+            puthd.go()           
+        else:
+            #getting projection center of (smoothed) image failed
+            self.status = False
+            print(("Updating projection center from beam {0}, "
+                   "based on taskid {1}, failed").
+                  format(self.beam,self.taskid))
 
         #regrid image
         #define out put, pbr - PB R egridded
