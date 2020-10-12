@@ -516,7 +516,8 @@ class Beam(object):
         print(self.ra.to(u.deg),self.dec.to(u.deg))
         result = v.query_region(SkyCoord(self.ra.to(u.deg),
                                          self.dec.to(u.deg),
-                                         frame='icrs'),
+                                         frame='icrs',
+                                         unit = (u.deg,u.deg)),
                                 radius=60*u.arcmin,
                                 catalog=nvsscat)
         #print(result)
