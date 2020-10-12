@@ -575,7 +575,7 @@ class Beam(object):
                 #append values to list
                 flux_ap.append(bdsf_sources['Peak_flux'][i])
                 flux_nvss.append(self.nvss_table['S1.4'][idx])
-                d_ra, d_ec = center_coord.spherical_offsets_to(source_coord)
+                d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
                 r = center_coord.separation(source_coord)
                 deltara.append(d_ra.to(u.arcsec).value)
                 deltadec.append(d_dec.to(u.arcsec).value)
