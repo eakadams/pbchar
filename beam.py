@@ -563,7 +563,7 @@ class Beam(object):
                                     unit=(u.deg,u.deg))
             #get closest match in NVSS catalog
             idx, sep2d, dist3d = source_coord.match_to_catalog_sky(nvss_coords)
-            print(sep2d)
+            print(sep2d.to(u.arcsec).value)
             #check if separation is w/in 5"
             if sep2d.to(u.arcsec) < 5*u.arcsec:
                 print("have a match, offset is {}".format(sep2d))
