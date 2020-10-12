@@ -108,6 +108,9 @@ class Beam(object):
         #variables for RA, Dec of center of image
         self.ra = None
         self.dec = None
+
+        #nvss table
+        self.nvss_table = None
         
         #setup a status
         #can query to see if steps should be run
@@ -513,9 +516,11 @@ class Beam(object):
                                               frame='icrs'),
                                 radius=60*u.arcmin,
                                 catalog=nvsscat)
-        print(result)
-        print(result[nvsscat])
-        
+        #print(result)
+        #print(result[nvsscat])
+
+        self.nvss_table = result[nvsscat]
+        print(self.nvss_table.colnames)
 
         #add something like self.nvss_sources which is table
 
