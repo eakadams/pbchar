@@ -294,9 +294,10 @@ class Beam(object):
 
         #having defined pbfits above,
         #check it exists, retrieve to miriad in workingdir
-        if os.path.exists(pbfits):
-            #get pbimage to miriad
-            pbim = os.path.join(self.workingdir,"pb")
+        #also check that output doesn't exist
+        pbim = os.path.join(self.workingdir,"pb")
+        if (os.path.exists(pbfits) and not os.path.isdir(pbim)):
+            #get pbimage to miriad           
             fits = lib.miriad('fits')
             fits.op = 'xyin'
             fits.in_ = pbfits
@@ -329,9 +330,12 @@ class Beam(object):
         #regrid image
         #define out put, pbr - PB R egridded
         
-        #check it exists for regridding
+        #check pbim exists for regridding
         #plus smoothed path for template
-        if os.path.isdir(pbim) and os.path.isdir(self.smimpath):
+        #also that output doesn't exist
+        if (os.path.isdir(pbim) and
+            os.path.isdir(self.smimpath) and
+            not os.path.isdir(self.pbpath)):
             regrid = lib.miriad('regrid')
             regrid.in_ = pbim
             regrid.out = self.pbpath
