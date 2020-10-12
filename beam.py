@@ -316,7 +316,8 @@ class Beam(object):
         ####and update center of PB image manually
         ####is this the right thing to do?
         ####check w/ Thijs & Helga.....
-        ###if (os.path.isdir(self.smimpath) and
+        ###if (os.path.isdir(self.smimpath)):
+        ###    #and
         ###    os.path.isdir(pbim)):
         ###    #get center values
         ###    gethd = lib.miriad('gethd')
@@ -360,6 +361,13 @@ class Beam(object):
             #what if I try options = offset
             #then maybe keep image values but on right grid
             regrid.options = 'offset'
+            #then my image is resize so things don't work later
+            #what if I add desc value?
+            #use helper function to get values
+            ra_vals = get_hdr('ra',self.smimpath)
+            dec_vals = get_hdr('dec',self.smimpath)
+            desc = "{0},{1},{2},{3},{4},{5},{6},{7}".
+            format(ravals[0,1,2,3],decvals[0,1,2,3])
             try:
                 regrid.go()
             except Exception as e:
@@ -374,7 +382,34 @@ class Beam(object):
                   format(self.beam,self.taskid))
             
 
+    def get_hdr(self,axis,image):
+        """
+        Get four sets of header values for given axis from image
+        CRVAl, CRPIX, CDELT, NAXIS
+        """
+        if axis is 'ra':
+            num = '1'
+        elif axis is 'dec':
+            num = '2'
+        else:
+            print("axis not recognized; default first axis")
+            num = '1'
 
+        gethd = lib.miriad('gethd')
+
+        gethd.in_ = os.path.join(image,'crval{}'.format(num))
+        crval = gethd.go()
+
+        gethd.in_ = os.path.join(image,'crpix{}'.format(num))
+        crpix = gethd.go()
+
+        gethd.in_ = os.path.join(image,'cdelt{}'.format(num))
+        cdelt = gethd.go()
+
+        gethd.in_ = os.path.join(image,'naxis{}'.format(num))
+        naxis = gethd.go()
+            
+        return crval,crpix,cdelt,naxis
 
     def do_pb(self):
         """
