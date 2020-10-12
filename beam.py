@@ -513,7 +513,7 @@ class Beam(object):
                               'MajAxis','MinAxis'],
                    row_limit = -1,
                    column_filters = {"MajAxis":"<50", "MinAxis":"<50"})
-        print(self.ra.to(u.deg).value,self.dec.to(u.deg).value)
+        print(self.ra.to(u.deg),self.dec.to(u.deg))
         result = v.query_region(SkyCoord(ra=self.ra, dec=self.dec,
                                          frame='icrs'),
                                 radius=60*u.arcmin,
