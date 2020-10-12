@@ -13,6 +13,7 @@ everything.
 
 import os
 import subprocess
+import bdsf
 
 from apercal.libs import lib
 
@@ -71,12 +72,18 @@ class Beam(object):
         #should include info about PBs being used and beam
         #taskids go in file names
         self.outputdir = os.path.join(outputdir,self.pbname,self.beam)
+        #make outputdir if it doesn't exist
+        if not os.path.isdir(self.outputdir):
+            os.makedirs(self.outputdir)
 
         #working dir
         #needs to have taskid/beam in case I run things in parallel
         #want to be able to clean up working dir at end and not
         #worry about writing conflicts
         self.workingdir = os.path.join(workingdir,self.taskid,self.beam)
+        #make working dir if it doesn't exist
+        if not os.path.isdir(self.workingdir):
+            os.makedirs(self.workingdir)
 
         #define paths I will want later
         self.fitspath = None #can only define this when know image name
@@ -88,7 +95,16 @@ class Beam(object):
         self.pbpath = os.path.join(self.workingdir,'pbr')
         #sm_pb for "SMoothed and PB corrected"
         self.pbsmimpath = os.path.join(self.workingdir,"sm_pb")
-
+        
+        # pbsmfits fits; sm_pb_<taskid>_mfs.fits in output dir; may want to keep
+        #but not for now while testing
+        self.pbsmfits = os.path.join(self.outputdir,"sm_pb_{}_mfs.fits".format(self.taskid))
+        self.pbsmfits = os.path.join(self.workingdir,"sm_pb.fits")
+        #soruce finding results; also to output dir, may want to keep
+        #but not for now while testing
+        self.bdsf_file = os.path.join(self.workingdir,"bdsf.sav")
+        self.bdsf_output = os.path.join(self.workingdir,"bdsf_output.srl")
+        
         #setup a status
         #can query to see if steps should be run
         #also useful output if things were successful overall
@@ -365,11 +381,11 @@ class Beam(object):
             #then my image is resize so things don't work later
             #what if I add desc value?
             #use helper function to get values
-            ra_vals = self.get_hdr('ra',self.smimpath)
-            dec_vals = self.get_hdr('dec',self.smimpath)
-            desc = "{0},{1},{2},{3},{4},{5},{6},{7}".format(
-                ra_vals[0],ra_vals[1],ra_vals[2],ra_vals[3],
-                dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
+            ###ra_vals = self.get_hdr('ra',self.smimpath)
+            ###dec_vals = self.get_hdr('dec',self.smimpath)
+            ###desc = "{0},{1},{2},{3},{4},{5},{6},{7}".format(
+            ###    ra_vals[0],ra_vals[1],ra_vals[2],ra_vals[3],
+            ###    dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
             try:
                 regrid.go()
             except Exception as e:
@@ -440,18 +456,34 @@ class Beam(object):
                 print(("Primary beam correction failed for "
                        "beam {0}, taskid {1}").format(self.beam,self.taskid))
                 print(e)
+
+        if (os.path.isdir(self.pbsmimpath) and
+            not os.path.exists(self.pbsmfits)):
+            #also write to fits file; needed for pyBDSF
+            fits = lib.miriad('fits')
+            fits.op = 'xyout'
+            fits.in_ = self.pbsmimpath
+            fits.out = self.pbsmfits
+            try:
+                fits.go()
+            except Exception as e:
+                self.status = False
+                print(("Writing cont image to fits for source finding failed "
+                       "for beam {0} of taskid {1}").format(self.beam,self.taskid))
+                print(e)
                 
             
-
-        #add something like self.pbsmimpath
-
 
     def find_sources(self):
         """
         Find sources in smoothed & pb-corrected image
         Write them to a temp file in working directory
         """
-
+        bdsf.process_image(self.bdsf_file,filename=self.pbsmfits,adaptive_rms_box=True,
+                           thresh_isl=3.0, thresh_pix=5.0).write_catalog(self.bdsf_output,
+                                                                         format='ascii',
+                                                                         clobber=True)
+        
         #add something like self.sourcepath
         #if I can keep sources in a Table add add that to ibject
         #that would also be great
