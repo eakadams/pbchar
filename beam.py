@@ -506,14 +506,15 @@ class Beam(object):
         Vizier.ROW_LIMIT = -1
         #get sky coord of cont image
         v = Vizier(columns = ['RAJ2000','DEJ2000','S1.4','e_S1.4',
-                              'MajAxis','MinAxis'])
+                              'MajAxis','MinAxis'],
+                   row_limit = -1)
         result = v.query_region(SkyCoord(ra=self.ra, dec=self.dec,
                                               unit=(u.deg, u.deg),
                                               frame='icrs'),
                                 radius=60*u.arcmin,
                                 catalog=nvsscat)
         print(result)
-        print(result.colnames)
+        print(result[nvsscat])
         
 
         #add something like self.nvss_sources which is table
