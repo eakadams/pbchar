@@ -622,8 +622,9 @@ class Beam(object):
         print(len(peak_flux_ap),len(int_flux_ap),len(int_flux_nvss),len(deltara),len(deltadec),
               len(radius),len(pb_level))
         self.match_table = Table(peak_flux_ap, #int_flux_ap,
-                                  int_flux_nvss,
-                                  deltara,deltadec,radius,pb_level)
+                                 # int_flux_nvss,
+                                 # deltara,deltadec,radius,pb_level
+                                 )
 
             
 
