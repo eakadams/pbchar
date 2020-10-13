@@ -619,7 +619,10 @@ class Beam(object):
         print(peak_flux_ap)
         self.match_table = Table([peak_flux_ap, int_flux_ap,
                                   int_flux_nvss,
-                                  deltara,deltadec,radius,pb_level])
+                                  deltara,deltadec,radius,pb_level],
+                                 names=('peak_flux_ap','int_flux_ap',
+                                        'int_flux_nvss','delta_ra',
+                                        'delta_dec','radius','pb_level'))
 
             
 
