@@ -580,9 +580,9 @@ class Beam(object):
             #YYMMDD name used for driftscans
             pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
                                   format(self.pbname,self.beam))
-        print(pbfits)
+
         with fits.open(pbfits) as hdul:
-            pbdata = hdul[1].data
+            pbdata = hdul[0].data
 
             
         #iterate through every Apertif sources
