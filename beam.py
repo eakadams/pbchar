@@ -581,8 +581,8 @@ class Beam(object):
             pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
                                   format(self.pbname,self.beam))
 
-       with fits.open(pbfits) as hdul:
-           pbdata = hdul[1].data
+        with fits.open(pbfits) as hdul:
+            pbdata = hdul[1].data
 
             
         #iterate through every Apertif sources
