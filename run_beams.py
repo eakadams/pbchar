@@ -1,6 +1,6 @@
 #python code to run beam in bulk
 
-from __future__ import print_function()
+from __future__ import print_function
 
 import beam as beam
 from astropy.io import ascii
