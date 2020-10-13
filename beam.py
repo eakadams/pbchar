@@ -665,4 +665,4 @@ class Beam(object):
         Maybe future addition?
         """
         #remove working directory to remove all intermediate files
-        shutil.rmtree(self.workingdir)
+        shutil.rmtree(self.workingdir,ignore_errors=True)
