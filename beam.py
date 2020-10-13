@@ -18,6 +18,7 @@ Improvement to-do list:
 
 import os
 import subprocess
+import shutil
 import bdsf
 from astroquery.vizier import Vizier
 from apercal.libs import lib
@@ -26,6 +27,7 @@ from astropy.io import ascii
 from astropy.io import fits
 from astropy.table import Table
 from astropy import units as u
+
 
 #import glob
 #import sys
@@ -172,7 +174,7 @@ class Beam(object):
             check = False
         #do the check
         #simple - does output directory exist?
-        elif os.path.exists(self.outputdir):
+        elif os.path.exists(self.match_output):
             check = True
         else:
             check = False
@@ -662,3 +664,5 @@ class Beam(object):
         I would want to write to fits to keep though, so seems complicted
         Maybe future addition?
         """
+        #remove working directory to remove all intermediate files
+        shutil.rmtree(self.workingdir)
