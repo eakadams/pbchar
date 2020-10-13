@@ -605,6 +605,7 @@ class Beam(object):
                 deltara.append(d_ra.to(u.arcsec).value)
                 deltadec.append(d_dec.to(u.arcsec).value)
                 radius.append(r.to(u.arcsec).value)
+                print(bdsf_sources['Xposn'][i],type(bdsf_sources['Xposn'][i]))
                 xpix = bdsf_sources['Xposn'][i] - 1 #0-index
                 ypix = bdsf_sources['Yposn'][i] - 1 #0-index
                 pbval = pbdata[ypix,xpix] #axes reversed
