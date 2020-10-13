@@ -503,7 +503,7 @@ class Beam(object):
         Write them to a temp file in working directory
         """
         #dont' do source finding if output already exists
-        if not os.path.exists(self.bdsf_output):
+        if not os.path.exists(self.bdsf_output) and not self.skipcheck:
             bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
                                thresh_isl=3.0, thresh_pix=5.0).write_catalog(outfile=self.bdsf_output,
                                                                              format='ascii',
