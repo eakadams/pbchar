@@ -617,11 +617,9 @@ class Beam(object):
 
         #next create a table that is cross match
         print(peak_flux_ap)
-        self.match_table = Table(peak_flux_ap)
-        #, int_flux_ap,
-                                 # int_flux_nvss,
-                                 # deltara,deltadec,radius,pb_level
-                                 #)
+        self.match_table = Table([peak_flux_ap, int_flux_ap,
+                                  int_flux_nvss,
+                                  deltara,deltadec,radius,pb_level])
 
             
 
