@@ -24,7 +24,7 @@ from apercal.libs import lib
 from astropy.coordinates import SkyCoord
 from astropy.io import ascii
 from astropy.io import fits
-from astropy.table import QTable
+from astropy.table import Table
 from astropy import units as u
 
 #import glob
@@ -600,14 +600,14 @@ class Beam(object):
             #check if separation is w/in 5"
             if sep2d  < 5*u.arcsec:
                 #append values to list
-                peak_flux_ap.append(bdsf_sources['Peak_flux'][i]*u.Jy)
-                int_flux_ap.append(bdsf_sources['Total_flux'][i]*u.Jy)
-                int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000. * u.Jy) #record in  Jy, match bdsf
+                peak_flux_ap.append(bdsf_sources['Peak_flux'][i])
+                int_flux_ap.append(bdsf_sources['Total_flux'][i])
+                int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000.) #record in  Jy, match bdsf
                 d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
                 r = center_coord.separation(source_coord)
-                deltara.append(d_ra.to(u.arcmin))
-                deltadec.append(d_dec.to(u.arcmin))
-                radius.append(r.to(u.arcmin))
+                deltara.append(d_ra.to(u.arcmin).value)
+                deltadec.append(d_dec.to(u.arcmin).value)
+                radius.append(r.to(u.arcmin).value)
                 xpix = int(bdsf_sources['Xposn'][i]) - 1 #0-index; force integer pixel
                 ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index; force interger pixel
                 pbval = pbdata[ypix,xpix] #axes reversed
@@ -616,11 +616,10 @@ class Beam(object):
         #print(flux_ap,flux_nvss,radius)
 
         #next create a table that is cross match
-        #use Quantity table since I have quantities
         for n in range(len(peak_flux_ap)):
             print(peak_flux_ap[n],int_flux_ap[n],int_flux_nvss[n],deltara[n],
                   deltadec[n],radius[n],pb_level[n])
-        self.match_table = QTable(peak_flux_ap, int_flux_ap,
+        self.match_table = Table(peak_flux_ap, int_flux_ap,
                                   int_flux_nvss,
                                   deltara,deltadec,radius,pb_level)
 
