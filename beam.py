@@ -609,9 +609,8 @@ class Beam(object):
                 deltara.append(d_ra.to(u.arcsec).value)
                 deltadec.append(d_dec.to(u.arcsec).value)
                 radius.append(r.to(u.arcsec).value)
-                print(bdsf_sources['Xposn'][i],type(bdsf_sources['Xposn'][i]))
-                xpix = int(bdsf_sources['Xposn'][i]) - 1 #0-index
-                ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index
+                xpix = int(bdsf_sources['Xposn'][i]) - 1 #0-index; force integer pixel
+                ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index; force interger pixel
                 pbval = pbdata[ypix,xpix] #axes reversed
                 pb_level.append(pbval)
 
@@ -619,6 +618,9 @@ class Beam(object):
 
         #next create a table that is cross match
         #use Quantity table since I have quantities
+        for n in range(len(peak_flux_ap)):
+            print(peak_flux_ap[n],int_flux_ap[n],int_flux_nvss[n],deltara[n],
+                  deltadec[n],radius[n],pb_level[n])
         self.match_table = QTable(peak_flux_ap, int_flux_ap,
                                   int_flux_nvss,
                                   deltara,deltadec,radius,pb_level)
