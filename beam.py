@@ -13,7 +13,6 @@ everything.
 Improvement to-do list:
 - Make NVSS filter size a param to init Beam
 - helper function for pbfits path (handle different types)
-- Add check to avoid repeating pyBDSF source finding
 """
 
 import os
@@ -71,6 +70,7 @@ class Beam(object):
         self.beam = '{:02d}'.format(beam)
         self.pbdir = pbdir
         self.pbname = pbname
+        self.skipcheck = skipcheck
         #check that masklevel is a float
         if type(masklevel) is float:
             self.masklevel = masklevel
