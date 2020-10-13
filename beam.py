@@ -599,16 +599,15 @@ class Beam(object):
             #print(sep2d.to(u.arcsec).value)
             #check if separation is w/in 5"
             if sep2d  < 5*u.arcsec:
-                print("have a match, offset is {}".format(sep2d.to(u.arcsec).value))
                 #append values to list
                 peak_flux_ap.append(bdsf_sources['Peak_flux'][i]*u.Jy)
                 int_flux_ap.append(bdsf_sources['Total_flux'][i]*u.Jy)
                 int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000. * u.Jy) #record in  Jy, match bdsf
                 d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
                 r = center_coord.separation(source_coord)
-                deltara.append(d_ra.to(u.arcsec).value)
-                deltadec.append(d_dec.to(u.arcsec).value)
-                radius.append(r.to(u.arcsec).value)
+                deltara.append(d_ra.to(u.arcmin))
+                deltadec.append(d_dec.to(u.arcmin))
+                radius.append(r.to(u.arcmin))
                 xpix = int(bdsf_sources['Xposn'][i]) - 1 #0-index; force integer pixel
                 ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index; force interger pixel
                 pbval = pbdata[ypix,xpix] #axes reversed
