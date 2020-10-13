@@ -638,7 +638,8 @@ class Beam(object):
         That might be a better, cleaner organization
         """
         #write out file
-        self.match_table.write(self.match_output,overwrite=True,format='csv')
+        ascii.write(self.match_table,self.match_output,format='csv',overwrite=True)
+        #self.match_table.write(self.match_output,overwrite=True,format='csv')
 
         #write out files
 
