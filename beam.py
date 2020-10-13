@@ -502,10 +502,13 @@ class Beam(object):
         Find sources in smoothed & pb-corrected image
         Write them to a temp file in working directory
         """
-        bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
-                           thresh_isl=3.0, thresh_pix=5.0).write_catalog(outfile=self.bdsf_output,
-                                                                         format='ascii',
-                                                                         clobber=True)
+        #dont' do source finding if output already exists
+        if not os.path.exists(self.bdsf_output):
+            bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
+                               thresh_isl=3.0, thresh_pix=5.0).write_catalog(outfile=self.bdsf_output,
+                                                                             format='ascii',
+                                                                             clobber=True)
+            
         
         #add something like self.sourcepath
         #if I can keep sources in a Table add add that to ibject
