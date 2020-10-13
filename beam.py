@@ -9,6 +9,10 @@ Code for doing PB correction of a single beam
 and comparing to NVSS, writing results to a 
 text file. Create a Beam object that handles
 everything. 
+
+Improvement to-do list:
+- Make NVSS filter size a param to init Beam
+- helper function for pbfits path (handle different types)
 """
 
 import os
@@ -18,13 +22,15 @@ from astroquery.vizier import Vizier
 from apercal.libs import lib
 from astropy.coordinates import SkyCoord
 from astropy.io import ascii
-
-import glob
-import sys
-from astropy.table import Table
-import numpy as np
-
+from astropy.io import fits
+from astropy.table import QTable
 from astropy import units as u
+
+#import glob
+#import sys
+#import numpy as np
+
+
 
 
 
@@ -106,12 +112,17 @@ class Beam(object):
         self.bdsf_file = os.path.join(self.workingdir,"bdsf.sav")
         self.bdsf_output = os.path.join(self.workingdir,"bdsf_output.srl")
 
+        #final output; csv file with matches
+        self.match_output = os.path.join(self.outputdir,"{0}_matches.csv".format(self.taskid))
+
         #variables for RA, Dec of center of image
         self.ra = None
         self.dec = None
 
         #nvss table
         self.nvss_table = None
+        #cross-match table
+        self.match_table = None
         
         #setup a status
         #can query to see if steps should be run
@@ -541,11 +552,13 @@ class Beam(object):
         print(bdsf_sources.colnames)
 
         #initialize empty lists to hold output from successful cross-matches
-        flux_ap = []
-        flux_nvss = []
+        peak_flux_ap = [] #apertif
+        int_flux_ap = []
+        int_flux_nvss = []
         deltara = [] #delta RA (Apertif) from image center
         deltadec = [] #delta dec (Apertif) from image center
         radius = [] #distance from field center
+        pb_level = [] #primary beam response at same position
 
         #get NVSS skycoord object
         #print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
@@ -560,7 +573,18 @@ class Beam(object):
                                  dec=self.dec.to(u.deg),
                                  unit=(u.deg,u.deg),
                                  frame='icrs')
-        
+
+        #open primary beam image for getting pb level
+        #might want a helper function for getting pbfits in future....
+        if len(self.pbname) == 6:
+            #YYMMDD name used for driftscans
+            pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
+                                  format(self.pbname,self.beam))
+
+       with fits.open(pbfits) as hdul:
+           pbdata = hdul[1].data
+
+            
         #iterate through every Apertif sources
         for i in range(len(bdsf_sources)):
             #get skycoord of source
@@ -573,19 +597,28 @@ class Beam(object):
             if sep2d  < 5*u.arcsec:
                 print("have a match, offset is {}".format(sep2d.to(u.arcsec).value))
                 #append values to list
-                flux_ap.append(bdsf_sources['Peak_flux'][i])
-                flux_nvss.append((self.nvss_table['S1.4'][idx])/1000.) #record in  Jy, match bdsf
+                peak_flux_ap.append(bdsf_sources['Peak_flux'][i]*u.Jy)
+                int_flux_ap.append(bdsf_sources['Total_flux'][i]*u.Jy)
+                int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000. * u.Jy) #record in  Jy, match bdsf
                 d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
                 r = center_coord.separation(source_coord)
                 deltara.append(d_ra.to(u.arcsec).value)
                 deltadec.append(d_dec.to(u.arcsec).value)
                 radius.append(r.to(u.arcsec).value)
+                xpix = bdsf_sources['Xposn'][i] 
+                ypix = bdsf_sources['Yposn'][i]
+                pbval = pbdata[ypix-1,xpix-1] #0-index, axes reversed
+                pb_level.append(pbval)
 
-        print(flux_ap,flux_nvss,radius)
+        #print(flux_ap,flux_nvss,radius)
+
+        #next create a table that is cross match
+        #use Quantity table since I have quantities
+        self.match_table = QTable(peak_flux_ap, int_flux_ap,
+                                  int_flux_nvss,
+                                  deltara,deltadec,radius,pb_level)
+
             
-            
-        
-        #add something like self.matches which is a table of matches
 
     def record(self):
         """
@@ -598,6 +631,8 @@ class Beam(object):
         outputdir / PB / beam / taskid.csv
         That might be a better, cleaner organization
         """
+        #write out file
+        self.match_table.write(self.match_output,overwrite=True,format='csv')
 
         #write out files
 
