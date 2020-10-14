@@ -162,6 +162,8 @@ class Beam(object):
             self.cross_match()
             self.record()
             self.clean_up()
+        else:
+            print('Output already exists; not running code')
             
     def check(self):
         """
@@ -300,6 +302,7 @@ class Beam(object):
                 convol.map = self.impath
                 convol.out = self.smimpath
                 convol.fwhm = '45,45' #NVSS resolution
+                convol.pa = '0' #should be default but had case where not in fits header
                 convol.options = 'final'
                 try:
                     convol.go()
