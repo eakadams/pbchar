@@ -302,7 +302,7 @@ class Beam(object):
                 convol.map = self.impath
                 convol.out = self.smimpath
                 convol.fwhm = '45,45' #NVSS resolution
-                convol.pa = '0' #should be default but had case where not in fits header
+                convol.pa = '0.1' #make slightly offset to help with beam header issues?
                 convol.options = 'final'
                 try:
                     convol.go()
