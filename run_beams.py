@@ -41,6 +41,7 @@ def run_beam(bm,tid):
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
                   masklevel=0.1)
     B.go()
+    print("Ran beam {0} of taskid {1}".format(bm,tid))
     
 
 
