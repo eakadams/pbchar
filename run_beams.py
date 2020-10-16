@@ -61,7 +61,7 @@ if __name__ == '__main__':
         jobs.append((bm,tid))
     print(jobs)
     #run jobs
-    pool.map_async(run_beam,jobs)
+    pool.map(run_beam,jobs)
     
 #for bm,taskid in cont_obs['Beam','ObsID']:
 #    B = beam.Beam(taskid,bm,masklevel=0.1)
