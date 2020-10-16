@@ -64,6 +64,9 @@ if __name__ == '__main__':
     #print(jobs)
     #run jobs
     pool.map(run_beam,jobs)
+    #close thing because i think I should
+    pool.close()
+    pool.join()
     
 #for bm,taskid in cont_obs['Beam','ObsID']:
 #    B = beam.Beam(taskid,bm,masklevel=0.1)
