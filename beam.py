@@ -509,10 +509,17 @@ class Beam(object):
         """
         #dont' do source finding if output already exists
         if not os.path.exists(self.bdsf_output) and not self.skipcheck:
-            bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
-                               thresh_isl=3.0, thresh_pix=5.0).write_catalog(outfile=self.bdsf_output,
-                                                                             format='ascii',
-                                                                             clobber=True)
+            try:
+                bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
+                                   thresh_isl=3.0, thresh_pix=5.0).
+                write_catalog(outfile=self.bdsf_output,
+                              format='ascii',
+                              clobber=True)
+            except Exception as e:
+                self.status = False
+                print(("Source finding failed for "
+                       "beam {0} of taskid {1}").format(self.beam,self.taskid))
+                print(e)
             
         
         #add something like self.sourcepath
@@ -556,78 +563,79 @@ class Beam(object):
         Make sure coordiante are close
         """
         #read in source list from pybdsf output
-        bdsf_sources = ascii.read(self.bdsf_output,guess=True,
-                                  data_start=5,header_start=4)
-        print(bdsf_sources.colnames)
+        #have to verify  it  exists because can fail
+        if os.path.exists(self.bdsf_output):
+            bdsf_sources = ascii.read(self.bdsf_output,guess=True,
+                                      data_start=5,header_start=4)
+            print(bdsf_sources.colnames)
 
-        #initialize empty lists to hold output from successful cross-matches
-        peak_flux_ap = [] #apertif
-        int_flux_ap = []
-        int_flux_nvss = []
-        deltara = [] #delta RA (Apertif) from image center
-        deltadec = [] #delta dec (Apertif) from image center
-        radius = [] #distance from field center
-        pb_level = [] #primary beam response at same position
+            #initialize empty lists to hold output from successful cross-matches
+            peak_flux_ap = [] #apertif
+            int_flux_ap = []
+            int_flux_nvss = []
+            deltara = [] #delta RA (Apertif) from image center
+            deltadec = [] #delta dec (Apertif) from image center
+            radius = [] #distance from field center
+            pb_level = [] #primary beam response at same position
 
-        #get NVSS skycoord object
-        #print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
-        nvss_coords = SkyCoord(ra=self.nvss_table['RAJ2000'],
-                               dec=self.nvss_table['DEJ2000'],
-                               frame='icrs',
-                               unit=(u.hourangle,u.deg))
+            #get NVSS skycoord object
+            #print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
+            nvss_coords = SkyCoord(ra=self.nvss_table['RAJ2000'],
+                                   dec=self.nvss_table['DEJ2000'],
+                                   frame='icrs',
+                                   unit=(u.hourangle,u.deg))
 
-        #print(nvss_coords[0:10])
-        #get center  iamge coord also
-        center_coord  = SkyCoord(ra=self.ra.to(u.deg),
-                                 dec=self.dec.to(u.deg),
-                                 unit=(u.deg,u.deg),
-                                 frame='icrs')
+            #print(nvss_coords[0:10])
+            #get center  iamge coord also
+            center_coord  = SkyCoord(ra=self.ra.to(u.deg),
+                                     dec=self.dec.to(u.deg),
+                                     unit=(u.deg,u.deg),
+                                     frame='icrs')
 
-        #open primary beam image for getting pb level
-        #might want a helper function for getting pbfits in future....
-        if len(self.pbname) == 6:
-            #YYMMDD name used for driftscans
-            pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
-                                  format(self.pbname,self.beam))
+            #open primary beam image for getting pb level
+            #might want a helper function for getting pbfits in future....
+            if len(self.pbname) == 6:
+                #YYMMDD name used for driftscans
+                pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
+                                      format(self.pbname,self.beam))
 
-        with fits.open(pbfits) as hdul:
-            pbdata = hdul[0].data
+            with fits.open(pbfits) as hdul:
+                pbdata = hdul[0].data
 
             
-        #iterate through every Apertif sources
-        for i in range(len(bdsf_sources)):
-            #get skycoord of source
-            source_coord = SkyCoord(ra=bdsf_sources['RA'][i],dec=bdsf_sources['DEC'][i],
-                                    unit=(u.deg,u.deg))
-            #get closest match in NVSS catalog
-            idx, sep2d, dist3d = source_coord.match_to_catalog_sky(nvss_coords)
-            #print(sep2d.to(u.arcsec).value)
-            #check if separation is w/in 5"
-            if sep2d  < 5*u.arcsec:
-                #append values to list
-                peak_flux_ap.append(bdsf_sources['Peak_flux'][i])
-                int_flux_ap.append(bdsf_sources['Total_flux'][i])
-                int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000.) #record in  Jy, match bdsf
-                d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
-                r = center_coord.separation(source_coord)
-                deltara.append(d_ra.to(u.arcmin).value)
-                deltadec.append(d_dec.to(u.arcmin).value)
-                radius.append(r.to(u.arcmin).value)
-                xpix = int(bdsf_sources['Xposn'][i]) - 1 #0-index; force integer pixel
-                ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index; force interger pixel
-                pbval = pbdata[ypix,xpix] #axes reversed
-                pb_level.append(pbval)
+            #iterate through every Apertif sources
+            for i in range(len(bdsf_sources)):
+                #get skycoord of source
+                source_coord = SkyCoord(ra=bdsf_sources['RA'][i],dec=bdsf_sources['DEC'][i],
+                                        unit=(u.deg,u.deg))
+                #get closest match in NVSS catalog
+                idx, sep2d, dist3d = source_coord.match_to_catalog_sky(nvss_coords)
+                #print(sep2d.to(u.arcsec).value)
+                #check if separation is w/in 5"
+                if sep2d  < 5*u.arcsec:
+                    #append values to list
+                    peak_flux_ap.append(bdsf_sources['Peak_flux'][i])
+                    int_flux_ap.append(bdsf_sources['Total_flux'][i])
+                    int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000.) #record in  Jy, match bdsf
+                    d_ra, d_dec = center_coord.spherical_offsets_to(source_coord)
+                    r = center_coord.separation(source_coord)
+                    deltara.append(d_ra.to(u.arcmin).value)
+                    deltadec.append(d_dec.to(u.arcmin).value)
+                    radius.append(r.to(u.arcmin).value)
+                    xpix = int(bdsf_sources['Xposn'][i]) - 1 #0-index; force integer pixel
+                    ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index; force interger pixel
+                    pbval = pbdata[ypix,xpix] #axes reversed
+                    pb_level.append(pbval)
 
-        #print(flux_ap,flux_nvss,radius)
 
-        #next create a table that is cross match
-        print(peak_flux_ap)
-        self.match_table = Table([peak_flux_ap, int_flux_ap,
+            self.match_table = Table([peak_flux_ap, int_flux_ap,
                                   int_flux_nvss,
-                                  deltara,deltadec,radius,pb_level],
-                                 names=('peak_flux_ap','int_flux_ap',
-                                        'int_flux_nvss','delta_ra',
-                                        'delta_dec','radius','pb_level'))
+                                      deltara,deltadec,radius,pb_level],
+                                     names=('peak_flux_ap','int_flux_ap',
+                                            'int_flux_nvss','delta_ra',
+                                            'delta_dec','radius','pb_level'))
+        else:
+            print("No bdsf output so skip cross-matching")
 
             
 
@@ -643,7 +651,16 @@ class Beam(object):
         That might be a better, cleaner organization
         """
         #write out file
-        ascii.write(self.match_table,self.match_output,format='csv',overwrite=True)
+        #only if table exists though
+        if len(self.match_table) > 0:
+            try:
+                ascii.write(self.match_table,self.match_output,format='csv',overwrite=True)
+            except Exception as e:
+                self.status = False
+                print("Writing matches table failed")
+                print(e)
+                
+                
         #self.match_table.write(self.match_output,overwrite=True,format='csv')
 
         #write out files
