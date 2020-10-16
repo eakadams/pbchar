@@ -653,7 +653,7 @@ class Beam(object):
         """
         #write out file
         #only if table exists though
-        if len(self.match_table) > 0:
+        if self.match_table is not None:
             try:
                 ascii.write(self.match_table,self.match_output,format='csv',overwrite=True)
             except Exception as e:
