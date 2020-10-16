@@ -55,7 +55,7 @@ if __name__ == '__main__':
     pool  = Pool(4)
     #set up jobs list
     jobs = []
-    for bm,tid in zip(cont_obs['Beam','ObsID']):
+    for bm,tid in cont_obs['Beam','ObsID']:
         jobs.append((bm,tid))
     #run jobs
     pool.map_async(run_beams,jobs)
