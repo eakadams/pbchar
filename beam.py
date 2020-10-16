@@ -13,6 +13,7 @@ everything.
 Improvement to-do list:
 - Make NVSS filter size a param to init Beam
 - helper function for pbfits path (handle different types)
+- Do everything in fits/python to avoid BPA miriad issues (and remove apercal reliance)
 """
 
 import os
