@@ -37,7 +37,9 @@ if pbname == '190912':
     
 
 #function to setup/run a beam
-def run_beam(bm,tid):
+def run_beam(packed_args):
+    #unpack  args
+    bm,tid = packed_args
     print("Initializing beam {0} for taskid {1}".format(bm,tid))
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
                   masklevel=0.1)
