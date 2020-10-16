@@ -511,10 +511,11 @@ class Beam(object):
         if not os.path.exists(self.bdsf_output) and not self.skipcheck:
             try:
                 bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
-                                   thresh_isl=3.0, thresh_pix=5.0).
-                write_catalog(outfile=self.bdsf_output,
-                              format='ascii',
-                              clobber=True)
+                                   thresh_isl=3.0,
+                                   thresh_pix=5.0). write_catalog(
+                                       outfile=self.bdsf_output,
+                                       format='ascii',
+                                       clobber=True)
             except Exception as e:
                 self.status = False
                 print(("Source finding failed for "
