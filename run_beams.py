@@ -45,7 +45,7 @@ def run_beam(bm,tid):
 
 
 #try to setup parallelization
-if __name__ = '__main__':
+if __name__ == '__main__':
     #get taskid/beam combination for DR1
     cont_obs = ascii.read('dr_year1_cont.csv')
     #test on just ten  entries
