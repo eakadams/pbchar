@@ -40,11 +40,11 @@ if pbname == '190912':
 def run_beam(packed_args):
     #unpack  args
     bm,tid = packed_args
-    print("Initializing beam {0} for taskid {1}".format(bm,tid))
+    #print("Initializing beam {0} for taskid {1}".format(bm,tid))
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
                   masklevel=0.1)
     B.go()
-    print("Ran beam {0} of taskid {1}".format(bm,tid))
+    #print("Ran beam {0} of taskid {1}".format(bm,tid))
     
 
 
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     #get taskid/beam combination for DR1
     cont_obs = ascii.read('dr_year1_cont.csv')
     #test on just ten  entries
-    cont_obs = cont_obs[0:10]
+    #cont_obs = cont_obs[0:10]
     #set up pool
     #default 4 cores; will add as param
     pool  = Pool(4)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     jobs = []
     for bm,tid in cont_obs['Beam','ObsID']:
         jobs.append((bm,tid))
-    print(jobs)
+    #print(jobs)
     #run jobs
     pool.map(run_beam,jobs)
     
