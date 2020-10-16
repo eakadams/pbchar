@@ -56,7 +56,7 @@ if __name__ == '__main__':
     #cont_obs = cont_obs[0:10]
     #set up pool
     #default 4 cores; will add as param
-    pool  = Pool(4)
+    pool  = Pool(8)
     #set up jobs list
     jobs = []
     for bm,tid in cont_obs['Beam','ObsID']:
