@@ -34,6 +34,11 @@ args = parser.parse_args()
 pbname = args.PB
 if pbname == '190912':
     pbdir = '/tank/apertif/driftscans/DR1/190912/continuum'
+elif pbname = '191002':
+    pbdir='/tank/denes/drift_scan/191002/cont'
+else:
+    pbdir = '/tank/apertif/driftscans/DR1/190912/continuum'
+    print('Using default DR PBs')
     
 
 #function to setup/run a beam
