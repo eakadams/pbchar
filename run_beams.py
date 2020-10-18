@@ -14,12 +14,12 @@ but only default is implemented
 
 Future improvements:
 - Options to run on other data
-- Parallelize
 - Implement PB selection properly
 - Add optional number of cores to argparse
 """
 
 import beam as beam
+import multiprocessing
 from astropy.io import ascii
 from multiprocessing import Pool
 import argparse
@@ -54,25 +54,38 @@ def run_beam(packed_args):
 
 
 #try to setup parallelization
-if __name__ == '__main__':
-    #get taskid/beam combination for DR1
-    cont_obs = ascii.read('dr_year1_cont.csv')
-    #test on just ten  entries
-    #cont_obs = cont_obs[0:10]
-    #set up pool
-    #default 4 cores; will add as param
-    pool  = Pool(6)
-    #set up jobs list
+#pyBDSF also uses pool so have to try something
+#to deal with that:
+#https://stackoverflow.com/questions/6974695/python-process-pool-non-daemonic
+class NoDaemonProcess(multiprocessing.Process):
+    #make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self,value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+class MyPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
+
+def work():
+    """
+    Put work here, 
+    pullint out of main test
+    """
+    #setup pool
+    pool = MyPool(6)
+    #setup jobs
     jobs = []
     for bm,tid in cont_obs['Beam','ObsID']:
         jobs.append((bm,tid))
-    #print(jobs)
-    #run jobs
+    #run pool
     pool.map(run_beam,jobs)
-    #close thing because i think I should
+    #close and join
     pool.close()
     pool.join()
     
-#for bm,taskid in cont_obs['Beam','ObsID']:
-#    B = beam.Beam(taskid,bm,masklevel=0.1)
-#    B.go()
+    
+if __name__ == '__main__':
+   #do  work
+    work()
