@@ -20,6 +20,7 @@ Future improvements:
 
 import beam as beam
 import multiprocessing
+import multiprocessing.pool
 from astropy.io import ascii
 from multiprocessing import Pool
 import argparse
