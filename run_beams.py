@@ -78,6 +78,7 @@ def work():
     pool = MyPool(6)
     #setup jobs
     jobs = []
+    cont_obs = ascii.read('dr_year1_cont.csv')
     for bm,tid in cont_obs['Beam','ObsID']:
         jobs.append((bm,tid))
     #run pool
