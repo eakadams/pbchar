@@ -75,7 +75,7 @@ def work():
     pullint out of main test
     """
     #setup pool
-    pool = MyPool(6)
+    pool = MyPool(12)
     #setup jobs
     jobs = []
     cont_obs = ascii.read('dr_year1_cont.csv')
