@@ -97,11 +97,13 @@ class PB(object):
         #make plots
         self.peak_ratio_position()
         self.int_ratio_position()
+        self.peak_ratio_radius()
 
         #make second time if date range is set
         if self.matches_date_range is not None:
             self.peak_ratio_position(daterange=True)
             self.int_ratio_position(daterange=True)
+            self.peak_ratio_radius(daterange=True)
 
     def peak_ratio_radius(self,daterange=False):
         """
