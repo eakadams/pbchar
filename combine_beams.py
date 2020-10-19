@@ -15,6 +15,7 @@ from multiprocessing import Pool
 import argparse
 import os
 import glob
+import numpy as np
 from astropy.table import Table
 
 #get global level paths
