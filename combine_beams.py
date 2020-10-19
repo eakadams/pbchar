@@ -24,15 +24,16 @@ pbchardir = this_dir
 filedir = os.path.join(pbchardir,"files")
 
 parser  = argparse.ArgumentParser(description='Collect information per beam for given PB set')
-parser.add_argumentt("PBdir", help='PB directory w/ cross-match info')
+parser.add_argument("PBdir", help='PB directory w/ cross-match info')
+args = parser.parse_args()
 
 def collect_info(beam):
     """
     Function to collect information for a single beam
     """
-    beamdir = os.path.join(PBdir,"{0:02d}".format(beam))
+    beamdir = os.path.join(args.PBdir,"{0:02d}".format(beam))
     #get list of csv files for each tid
-    tid_csv_list = glob.glob(os.path.joing(beamdir,"*matches.csv"))
+    tid_csv_list = glob.glob(os.path.join(beamdir,"*matches.csv"))
     #set up empty arrays to hold things
     tid_array = np.array([])
     peak_flux_array = np.array([])
@@ -45,7 +46,7 @@ def collect_info(beam):
     #iterate through matches and append to arrays
     for tid_csv in tid_csv_list:
         tid_csv_name = os.path.basename(tid_csv)
-        tid = tid_csv[0:9]
+        tid = tid_csv_name[0:9]
         t = ascii.read(tid_csv,format='csv')
         tmp_tid_array = np.full(len(t),tid)
         tid_array = np.append(tid_array,tmp_tid_array)
@@ -64,7 +65,7 @@ def collect_info(beam):
                                             'int_flux_nvss','delta_ra',
                                             'delta_dec','radius','pb_level'))
     #write table to pbchar, filedir
-    pbname = os.path.basename(PBdir)
+    pbname = os.path.basename(args.PBdir)
     output = os.path.join(filedir,"{0}_{1:02d}.csv".format(pbname,beam))
     ascii.write(combined_beam_table,output,format='csv',overwrite=True)
     
