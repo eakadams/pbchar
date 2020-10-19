@@ -10,7 +10,11 @@ NVSS cross-matching in bulk on a
 batch of beams.
 Runs on all of DR1 for now
 Can specify primary beam to use
-but only default is implemented
+but only 190912 and 191002 are implemented
+
+Issues with processes dying during parallelization
+Add try/except following
+http://openkb.fr/Python_multiprocessing_pool_hangs_at_join
 
 Future improvements:
 - Options to run on other data
@@ -51,7 +55,11 @@ def run_beam(packed_args):
     #print("Initializing beam {0} for taskid {1}".format(bm,tid))
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
                   masklevel=0.1)
-    B.go()
+    try:
+        B.go()
+    except Exception as e:
+        print(("Processing failed for beam {0}, "
+               "taskid {1}").format(bm,tid))
     #print("Ran beam {0} of taskid {1}".format(bm,tid))
     
 
