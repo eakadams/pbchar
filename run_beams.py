@@ -29,6 +29,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Run primary beam correction and cross-matching')
 parser.add_argument("--PB", help='Primary beam to use',
                     default='190912')
+parser.add_argument("--nccores",help='Number of cores to use',
+                    default=12, type=int)
 args = parser.parse_args()
 
 #get pbname and pbdir based on input
