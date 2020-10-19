@@ -29,7 +29,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Run primary beam correction and cross-matching')
 parser.add_argument("--PB", help='Primary beam to use',
                     default='190912')
-parser.add_argument("--nccores",help='Number of cores to use',
+parser.add_argument("--ncores",help='Number of cores to use',
                     default=12, type=int)
 args = parser.parse_args()
 
@@ -77,7 +77,7 @@ def work():
     pullint out of main test
     """
     #setup pool
-    pool = MyPool(12)
+    pool = MyPool(args.ncores)
     #setup jobs
     jobs = []
     cont_obs = ascii.read('dr_year1_cont.csv')
