@@ -333,6 +333,9 @@ class Beam(object):
             pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
                                   format(self.pbname,self.beam))
             #may have to add a check about string length, but wait until it's a problem
+        #check if gpall
+        if self.pbname == 'gpall':
+            pbfits = os.path.join(self.pbdir,"pb_{0}_gpall.fits".format(self.beam))
 
         #having defined pbfits above,
         #check it exists, retrieve to miriad in workingdir
