@@ -409,7 +409,7 @@ class Beam(object):
             regrid.axes = '1,2'
             #what if I try options = offset
             #then maybe keep image values but on right grid
-            regrid.options = 'offset'
+            #regrid.options = 'offset'
             #then my image is resize so things don't work later
             #what if I add desc value?
             #use helper function to get values
