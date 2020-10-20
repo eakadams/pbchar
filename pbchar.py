@@ -182,89 +182,7 @@ class PB(object):
         plt.savefig(figpath)
 
         #close figure to be safe
-        plt.close()
-        
-
-
-    def peak_ratio_radius(self,daterange=False):
-        """
-        1-D plot of peak ratio as a function of radius
-        Also add 1-D plots for delta_ra,delta_dec (offsets)
-        And also as function of pb_level
-        """
-        #get variables, based on date range
-        if daterange:
-            peak_ratio = ( self.matches_date_range['peak_flux_ap'] /
-                           self.matches_date_range['int_flux_nvss'] )
-            delta_ra = self.matches_date_range['delta_ra']
-            delta_dec = self.matches_date_range['delta_dec']
-            pb_level = self.matches_date_range['pb_level']
-            radius = self.matches_date_range['radius']
-            figname = ("{0}_B{1}_{2}_{3}_"
-                       "peak_ratio_radius.png").format(self.pbname,self.beam,
-                                                         self.startdate,self.enddate)
-        else:
-            peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
-            delta_ra = self.matches['delta_ra']
-            delta_dec = self.matches['delta_dec']
-            pb_level = self.matches['pb_level']
-            radius = self.matches['radius']
-            figname = "{0}_B{1}_peak_ratio_radius.png".format(self.pbname,self.beam)
-
-        #setup figure, 4 subplots
-        fig, axes = plt.subplots(2,2,figsize = (12,12),
-                                 sharex = 'row',
-                                 sharey = 'col')
-        #plot function of radius
-        axes[0,0].scatter(radius,peak_ratio,marker='.')
-        axes[0,0].set_ylabel('Apertif peak flux / NVSS integrated flux')
-        axes[0,0].set_xlabel('Radius [arcmin]')
-        #add running mean
-        #sort peak_ratio by radius
-        rad, peak_mean = running_mean(radius,peak_ratio,20)
-        axes[0,0].plot(rad, peak_mean,
-                       label='Running mean over 20 sources',
-                       color='red')
-        #add relevant lines
-        axes[0,0].plot([0,np.max(radius)],[1,1],color='black')
-        axes[0,0].plot([0,np.max(radius)],[1.2,1.2],color='black',linestyle='--')
-        axes[0,0].plot([0,np.max(radius)],[0.8,0.8],color='black',linestyle='--')
-        #plot funciton of PB level
-        axes[0,1].scatter(pb_level,peak_ratio,marker='.')
-        axes[0,1].set_xlabel('Primary beam response level')
-        axes[0,1].plot([1,0.1],[1,1],color='black')
-        axes[0,1].plot([1,0.1],[1.2,1.2],color='black',linestyle='--')
-        axes[0,1].plot([1,0.1],[0.8,0.8],color='black',linestyle='--')
-        axes[0,1].set_xlim(1,0.1)
-        lev, peak_mean = running_mean(pb_level,peak_ratio,20)
-        axes[0,1].plot(lev, peak_mean,
-                       label='Running mean over 20 sources',
-                       color='red')
-        #plot function of RA offset
-        axes[1,0].scatter(delta_ra,peak_ratio,marker='.')
-        axes[1,0].set_ylabel('Apertif peak flux / NVSS integrated flux')
-        axes[1,0].set_xlabel('Delta R.A. [arcmin]')
-        axes[1,0].plot([-30,30],[1,1],color='black')
-        axes[1,0].plot([-30,30],[1.2,1.2],color='black',linestyle='--')
-        axes[1,0].plot([-30,30],[0.8,0.8],color='black',linestyle='--')
-        ra, peak_mean = running_mean(delta_ra,peak_ratio,20)
-        axes[1,0].plot(ra, peak_mean,
-                       label='Running mean over 20 sources',
-                       color='red')
-        #plot function of dec offset
-        axes[1,1].scatter(delta_dec,peak_ratio,marker='.')
-        #axes[1,1].set_ylabel('Apertif peak flux / NVSS integrated flux')
-        axes[1,1].set_xlabel('Delta Decl. [arcmin]')
-        axes[1,1].plot([-30,30],[1,1],color='black')
-        axes[1,1].plot([-30,30],[1.2,1.2],color='black',linestyle='--')
-        axes[1,1].plot([-30,30],[0.8,0.8],color='black',linestyle='--')
-        dec, peak_mean = running_mean(delta_dec,peak_ratio,20)
-        axes[1,1].plot(dec, peak_mean,
-                       label='Running mean over 20 sources',
-                       color='red')
-        #save plot to pre-defined output, based on PB/CB
-        figpath = os.path.join(figdir,figname)
-        plt.savefig(figpath)
+        plt.close('all')
 
 
     def position_plots(self,daterange=False):
@@ -310,6 +228,8 @@ class PB(object):
 
         figpath = os.path.join(figdir,figname)
         plt.savefig(figpath)
+
+        plt.close('all')
 
 def running_mean(x,y,N):
     #cumsum = np.cumsum(np.insert(x,0,0))
