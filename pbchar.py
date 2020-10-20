@@ -98,7 +98,7 @@ class PB(object):
 
         #make second time if date range is set
         if self.matches_date_range is not None:
-            self.position_plots()
+            self.position_plots(daterange=True)
             self.oned_plots(daterange=True)
 
     def oned_plots(self,daterange=False):
@@ -180,6 +180,9 @@ class PB(object):
         #save plot to pre-defined output, based on PB/CB
         figpath = os.path.join(figdir,figname)
         plt.savefig(figpath)
+
+        #close figure to be safe
+        plt.close()
         
 
 
