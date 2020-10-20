@@ -421,11 +421,7 @@ class Beam(object):
             ###    ra_vals[0],ra_vals[1],ra_vals[2],ra_vals[3],
             ###    dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
 
-            #also write regridded pb to fits - need later for pblevel
-            fits = lib.miriad('fits')
-            fits.in_ = self.pbpath
-            fits.out = self.pbrfits
-            fits.op = 'xyout'
+            
             try:
                 regrid.go()
                 fits.go()
@@ -439,6 +435,20 @@ class Beam(object):
             print(("Either primary beam or smoothed continuum "
                    "image missing for beam {0}, taskid{1}").
                   format(self.beam,self.taskid))
+
+        #write regridded pb to fits; need later
+        if os.path.isdir(self.pbpath):
+            fits = lib.miriad('fits')
+            fits.in_ = self.pbpath
+            fits.out = self.pbrfits
+            fits.op = 'xyout'
+            try:
+                fits.go()
+                print("Writing {0} to {1}".format(self.pbpath,self.pbrfits))
+            except Exception as e:
+                print("Writing {0} failed".format(self.pbrfits))
+                print(e)
+            
             
 
     def get_hdr(self,axis,image):
