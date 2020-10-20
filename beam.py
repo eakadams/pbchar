@@ -106,6 +106,8 @@ class Beam(object):
         self.pbpath = os.path.join(self.workingdir,'pbr')
         #sm_pb for "SMoothed and PB corrected"
         self.pbsmimpath = os.path.join(self.workingdir,"sm_pb")
+        #regridded PB fits
+        self.pbrfits = os.path.join(self.workingdir,"pbr.fits")
         
         # pbsmfits fits; sm_pb_<taskid>_mfs.fits in output dir; may want to keep
         #but not for now while testing
@@ -371,7 +373,7 @@ class Beam(object):
             #gethd.format = 'hms'
             ra_ref = gethd.go()
             gethd.in_ = os.path.join(self.smimpath,'crval2')
-            #gethd.format = 'dms'
+d            #gethd.format = 'dms'
             dec_ref = gethd.go()
             #update center
             puthd = lib.miriad('puthd')
@@ -418,8 +420,15 @@ class Beam(object):
             ###desc = "{0},{1},{2},{3},{4},{5},{6},{7}".format(
             ###    ra_vals[0],ra_vals[1],ra_vals[2],ra_vals[3],
             ###    dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
+
+            #also write regridded pb to fits - need later for pblevel
+            fits = lib.miriad('fits')
+            fits.in_ = self.pbpath
+            fits.out = self.pbrfits
+            fits.op = 'xyout'
             try:
                 regrid.go()
+                fits.go()
             except Exception as e:
                 self.status = False
                 print(("Regridding failed for primary beam {0},"
@@ -599,12 +608,12 @@ class Beam(object):
 
             #open primary beam image for getting pb level
             #might want a helper function for getting pbfits in future....
-            if len(self.pbname) == 6:
-                #YYMMDD name used for driftscans
-                pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
-                                      format(self.pbname,self.beam))
+            #if len(self.pbname) == 6:
+            #    #YYMMDD name used for driftscans
+            #    pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
+            #                          format(self.pbname,self.beam))
 
-            with fits.open(pbfits) as hdul:
+            with fits.open(self.pbrfits) as hdul:
                 pbdata = hdul[0].data
 
             
