@@ -87,14 +87,13 @@ class PB(object):
     def go(self):
         """
         Run all available analysis plots:
-        - peak_ratio_position
-        - int_ratio_position
+        - position (peak & int ratios)
+        - oned (for both peak & int)
 
         Optionally, same plots also date-range-limited:
-        - peak_ratio_position_date_range
-        - int_ratio_position
         """
         #make plots
+        self.position_plots()
         self.peak_ratio_position()
         self.int_ratio_position()
         self.peak_ratio_radius()
@@ -133,108 +132,107 @@ class PB(object):
         #setup figure, 4 subplots
         fig, axes = plt.subplots(2,2,figsize = (12,12))
         #plot function of radius
-        axes[0,0].scatter(radius,peak_ratio)
+        axes[0,0].scatter(radius,peak_ratio,marker='.')
         axes[0,0].set_ylabel('Apertif peak flux / NVSS integrated flux')
         axes[0,0].set_xlabel('Radius [arcmin]')
         #add running mean
         #sort peak_ratio by radius
-        rad_inds = radius.argsort()
-        peak_ratio_radius = peak_ratio[rad_inds]
-        radius_sorted = radius[rad_inds]
-        peak_ratio_radius_running_mean = running_mean(peak_ratio_radius, 10)
-        #print(len(rad_inds),len(radius_sorted),len(peak_ratio_radius),len(peak_ratio_radius_running_mean))
-        
-        axes[0,0].plot(radius_sorted,peak_ratio_radius_running_mean,
-                       label='Running mean over 10 observations')
+        rad, peak_mean = running_mean(radius,peak_ratio,20)
+        axes[0,0].plot(rad, peak_mean,
+                       label='Running mean over 20 sources',
+                       color='red')
+        #add relevant lines
+        axes[0,0].plot([0,np.max(radius)],[1,1],color='black')
+        axes[0,0].plot([0,np.max(radius)],[1.2,1.2],color='black',linestyle='--')
+        axes[0,0].plot([0,np.max(radius)],[0.8,0.8],color='black',linestyle='--')
         #plot funciton of PB level
-        axes[0,1].scatter(pb_level,peak_ratio)
-        #axes[0,1].set_ylabel('Apertif peak flux / NVSS integrated flux')
+        axes[0,1].scatter(pb_level,peak_ratio,marker='.')
         axes[0,1].set_xlabel('Primary beam response level')
+        axes[0,1].plot([1,0.1],[1,1],color='black')
+        axes[0,1].plot([1,0.1],[1.2,1.2],color='black',linestyle='--')
+        axes[0,1].plot([1,0.1],[0.8,0.8],color='black',linestyle='--')
+        axes[0,1].set_xlim(1,0.1)
+        lev, peak_mean = running_mean(pb_level,peak_ratio,20)
+        axes[0,1].plot(lev, peak_mean,
+                       label='Running mean over 20 sources',
+                       color='red')
         #plot function of RA offset
-        axes[1,0].scatter(delta_ra,peak_ratio)
+        axes[1,0].scatter(delta_ra,peak_ratio,marker='.')
         axes[1,0].set_ylabel('Apertif peak flux / NVSS integrated flux')
         axes[1,0].set_xlabel('Delta R.A. [arcmin]')
+        axes[1,0].plot([-30,30],[1,1],color='black')
+        axes[1,0].plot([-30,30],[1.2,1.2],color='black',linestyle='--')
+        axes[1,0].plot([-30,30],[0.8,0.8],color='black',linestyle='--')
+        ra, peak_mean = running_mean(delta_ra,peak_ratio,20)
+        axes[1,0].plot(ra, peak_mean,
+                       label='Running mean over 20 sources',
+                       color='red')
         #plot function of dec offset
-        axes[1,1].scatter(delta_dec,peak_ratio)
+        axes[1,1].scatter(delta_dec,peak_ratio,marker='.')
         #axes[1,1].set_ylabel('Apertif peak flux / NVSS integrated flux')
         axes[1,1].set_xlabel('Delta Decl. [arcmin]')
+        axes[1,1].plot([-30,30],[1,1],color='black')
+        axes[1,1].plot([-30,30],[1.2,1.2],color='black',linestyle='--')
+        axes[1,1].plot([-30,30],[0.8,0.8],color='black',linestyle='--')
+        dec, peak_mean = running_mean(delta_dec,peak_ratio,20)
+        axes[1,1].plot(dec, peak_mean,
+                       label='Running mean over 20 sources',
+                       color='red')
         #save plot to pre-defined output, based on PB/CB
         figpath = os.path.join(figdir,figname)
         plt.savefig(figpath)
 
-    def peak_ratio_position(self,daterange=False):
-        """
-        2-d Plot peak ratio as a function of position
-        """
-        #get variables, based on daterange
-        if daterange:
-            peak_ratio = ( self.matches_date_range['peak_flux_ap'] /
-                           self.matches_date_range['int_flux_nvss'] )
-            delta_ra = self.matches_date_range['delta_ra']
-            delta_dec = self.matches_date_range['delta_dec']
-            figname = ("{0}_B{1}_{2}_{3}_"
-                       "peak_ratio_position.png").format(self.pbname,self.beam,
-                                                         self.startdate,self.enddate)
-        else:
-            peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
-            delta_ra = self.matches['delta_ra']
-            delta_dec = self.matches['delta_dec']
-            figname = "{0}_B{1}_peak_ratio_position.png".format(self.pbname,self.beam)
-        #setup figure
-        fig, ax = plt.subplots(figsize=(8,8))
-        #scatter plot w/ color mapped to peak_ratio
-        #later add size proportional to source size?
-        sc= ax.scatter(delta_ra,delta_dec,
-                       c=peak_ratio,s=20,
-                       vmin = 0.75, vmax=1.5)
-        #set color bar
-        fig.colorbar(sc,ax=ax)
-        #set titles and labels
-        ax.set_title('Apertif peak flux / NVSS integrated flux')
-        ax.set_xlabel('Delta RA [arcmin]')
-        ax.set_ylabel('Delta Dec [arcmin]')
-        #save plot to pre-defined output, based on PB/CB
-        figpath = os.path.join(figdir,figname)
-        plt.savefig(figpath)
 
-    def int_ratio_position(self,daterange=False):
+    def position_plots(self,daterange=False):
         """
-        Plot ratio of integrated flux as a function of position
+        2-D plots for int and peak flux ratios
         """
         #get variables, based on date range
         if daterange:
+            peak_ratio = ( self.matches_date_range['peak_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
             int_ratio = ( self.matches_date_range['int_flux_ap'] /
                            self.matches_date_range['int_flux_nvss'] )
             delta_ra = self.matches_date_range['delta_ra']
             delta_dec = self.matches_date_range['delta_dec']
-            figname = ("{0}_B{1}_{2}_{3}_"
-                       "int_ratio_position.png").format(self.pbname,self.beam,
-                                                         self.startdate,self.enddate)
+            figname = ("position_B{1}_{0}_{2}_{3}"
+                       ".png").format(self.pbname,self.beam,
+                                      self.startdate,self.enddate)
         else:
+            peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
             int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
             delta_ra = self.matches['delta_ra']
             delta_dec = self.matches['delta_dec']
-            figname = "{0}_B{1}_int_ratio_position.png".format(self.pbname,self.beam)
+            figname = "position_B{1}_{0}.png".format(self.pbname,self.beam)
+
         #setup figure
-        fig, ax = plt.subplots(figsize=(8,8))
-        #scatter plot w/ color mapped to peak_ratio
-        #later add size proportional to source size?
-        sc = ax.scatter(delta_ra,delta_dec,
-                        c=int_ratio,s=20,
-                        vmin = 0.75, vmax=1.5)
-        #set color bar
-        fig.colorbar(sc,ax=ax)
-        #set titles and labels
-        ax.set_title('Apertif integrated flux / NVSS integrated flux')
-        ax.set_xlabel('Delta RA [arcmin]')
-        ax.set_ylabel('Delta Dec [arcmin]')
-        #save plot to pre-defined output, based on PB/CB
+        fig, (ax1,ax2) = plt.subplots(1,2,figsize=(12,6))
+
+        sc_peak = ax1.scatter(delta_ra,delta_dec,
+                              c=peak_ratio,s=20,
+                              vmin = 0.75, vmax=1.5)
+        fig.colorbar(sc_peak,ax=ax1)
+        ax1.set_title('Apertif peak flux / NVSS integrated flux')
+        ax1.set_xlabel('Delta RA [arcmin]')
+        ax1.set_ylabel('Delta Dec [arcmin]')
+
+        sc_int = ax2.scatter(delta_ra,delta_dec,
+                              c=int_ratio,s=20,
+                              vmin = 0.75, vmax=1.5)
+        fig.colorbar(sc_int,ax=ax2)
+        ax2.set_title('Apertif integrated flux / NVSS integrated flux')
+        ax2.set_xlabel('Delta RA [arcmin]')
+        ax2.set_ylabel('Delta Dec [arcmin]')
+
         figpath = os.path.join(figdir,figname)
         plt.savefig(figpath)
 
-
-
-def running_mean(x,N):
+def running_mean(x,y,N):
     #cumsum = np.cumsum(np.insert(x,0,0))
     #return (cumsum[N:] - cumsum[:-N]) / float(N)
-    return np.convolve(x, np.ones((N,))/N, mode='same')
+    x_inds = x.argsort()
+    y_sorted = y[x_inds]
+    x_sorted = x[x_inds]
+    y_running_mean = np.convolve(y_sorted, np.ones((N,))/N, mode='same')
+    return x_sorted,y_running_mean
+
