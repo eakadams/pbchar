@@ -45,6 +45,8 @@ elif pbname == '191002':
     pbdir='/tank/denes/drift_scan/191002/cont'
 elif pbname == 'gpall':
     pbdir = '/data/kutkin/cbeams'
+elif pbname == '200130':
+    pbdir = '/tank/denes/drift_scan/200130/cont'
 else:
     pbdir = '/tank/apertif/driftscans/DR1/190912/continuum'
     print('Using default DR PBs')
