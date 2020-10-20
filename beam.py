@@ -421,10 +421,8 @@ class Beam(object):
             ###    ra_vals[0],ra_vals[1],ra_vals[2],ra_vals[3],
             ###    dec_vals[0],dec_vals[1],dec_vals[2],dec_vals[3])
 
-            
             try:
                 regrid.go()
-                fits.go()
             except Exception as e:
                 self.status = False
                 print(("Regridding failed for primary beam {0},"
