@@ -28,13 +28,20 @@ import multiprocessing.pool
 from astropy.io import ascii
 from multiprocessing import Pool
 import argparse
-
+import os
+import shutil
 
 parser = argparse.ArgumentParser(description='Run primary beam correction and cross-matching')
 parser.add_argument("--PB", help='Primary beam to use',
                     default='190912')
 parser.add_argument("--ncores",help='Number of cores to use',
                     default=12, type=int)
+parser.add_argument("--check",help="Check whether output exists before mapping/running",
+                    default=True, type=bool)
+parser.add_argument("--workingdir",help="Location to write tmp files",
+                    default="/tank/adams/pbchar/tmp")
+parser.add_argument("-outputdir",help="Location to write output",
+                    default="/tank/adams/pbchar/")
 args = parser.parse_args()
 
 #get pbname and pbdir based on input
@@ -50,6 +57,16 @@ elif pbname == '200130':
 else:
     pbdir = '/tank/apertif/driftscans/DR1/190912/continuum'
     print('Using default DR PBs')
+
+
+#cleanup working dir before starting
+#avoids conflicts between runs
+#can't run multiple at the same time!
+if os.path.isdir(args.workingdir):
+    #delete
+    print("Deleting working directory before start")
+    print(args.workindir)
+    print("shutil.rmtree(args.workingdir,ignore_errors = True)")
     
 
 #function to setup/run a beam
@@ -58,7 +75,9 @@ def run_beam(packed_args):
     bm,tid = packed_args
     #print("Initializing beam {0} for taskid {1}".format(bm,tid))
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
-                  masklevel=0.1)
+                  masklevel=0.1,
+                  outputdir = args.outputdir,
+                  workingdir = args.workingdir)
     try:
         B.go()
     except Exception as e:
@@ -93,8 +112,19 @@ def work():
     #setup jobs
     jobs = []
     cont_obs = ascii.read('dr_year1_cont.csv')
-    for bm,tid in cont_obs['Beam','ObsID']:
-        jobs.append((bm,tid))
+    if check:
+        for bm,tid in cont_obs['Beam','ObsID']:
+            #first check if output exists
+            beam_outputdir = os.path.join(args.outputdir,args.pbname,":02d".format(bm))
+            match_output = os.path.join(beam_outputdir,
+                                        "{0}_matches.csv".format(tid))
+            if not os.path.exists(match_output):
+                jobs.append((bm,tid))
+            else:
+                print("Skipping {0}, {1} from mapping".format(bm,tid))
+    else:
+        for bm,tid in cont_obs['Beam','ObsID']:
+            jobs.append((bm,tid))
     #run pool
     pool.map(run_beam,jobs)
     #close and join
