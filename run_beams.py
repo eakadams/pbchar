@@ -113,7 +113,9 @@ def work():
     jobs = []
     cont_obs = ascii.read('dr_year1_cont.csv')
     if args.check:
+        print("Checking before mapping")
         for bm,tid in cont_obs['Beam','ObsID']:
+            print("Checking before mapping")
             #first check if output exists
             beam_outputdir = os.path.join(args.outputdir,pbname,":02d".format(bm))
             match_output = os.path.join(beam_outputdir,
@@ -124,7 +126,9 @@ def work():
             else:
                 print("Skipping {0}, {1} from mapping".format(bm,tid))
     else:
+        print("Not checking before mapping")
         for bm,tid in cont_obs['Beam','ObsID']:
+            print("Not checking before mapping")
             jobs.append((bm,tid))
     #run pool
     pool.map(run_beam,jobs)
