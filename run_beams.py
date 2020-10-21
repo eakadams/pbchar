@@ -115,7 +115,7 @@ def work():
     if args.check:
         for bm,tid in cont_obs['Beam','ObsID']:
             #first check if output exists
-            beam_outputdir = os.path.join(args.outputdir,args.pbname,":02d".format(bm))
+            beam_outputdir = os.path.join(args.outputdir,pbname,":02d".format(bm))
             match_output = os.path.join(beam_outputdir,
                                         "{0}_matches.csv".format(tid))
             if not os.path.exists(match_output):
