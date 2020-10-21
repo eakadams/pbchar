@@ -65,7 +65,7 @@ else:
 if os.path.isdir(args.workingdir):
     #delete
     print("Deleting working directory before start")
-    print(args.workindir)
+    print(args.workingdir)
     print("shutil.rmtree(args.workingdir,ignore_errors = True)")
     
 
