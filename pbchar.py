@@ -78,7 +78,7 @@ class PB(object):
             endid_str = self.enddate+'999'
             endid = np.int(endid_str)
             ind = np.where(limit_matches['ObsID'] < endid)[0]
-            print(len(ind),len(limit_matces),len(self.matches))
+            print(len(ind),len(limit_matches),len(self.matches))
             self.matches_date_range = limit_matches[ind]
         else:
             self.matches_date_range = limit_matches
