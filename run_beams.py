@@ -112,7 +112,7 @@ def work():
     #setup jobs
     jobs = []
     cont_obs = ascii.read('dr_year1_cont.csv')
-    if check:
+    if args.check:
         for bm,tid in cont_obs['Beam','ObsID']:
             #first check if output exists
             beam_outputdir = os.path.join(args.outputdir,args.pbname,":02d".format(bm))
