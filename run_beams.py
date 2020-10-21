@@ -123,11 +123,11 @@ def work():
     else:
         for bm,tid in cont_obs['Beam','ObsID']:
             jobs.append((bm,tid))
-    ##run pool
-    #pool.map(run_beam,jobs)
-    ##close and join
-    #pool.close()
-    #pool.join()
+    #run pool
+    pool.map(run_beam,jobs)
+    #close and join
+    pool.close()
+    pool.join()
     
     
 if __name__ == '__main__':
