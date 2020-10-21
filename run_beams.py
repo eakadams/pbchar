@@ -119,6 +119,7 @@ def work():
             match_output = os.path.join(beam_outputdir,
                                         "{0}_matches.csv".format(tid))
             if not os.path.exists(match_output):
+                print(match_output)
                 jobs.append((bm,tid))
             else:
                 print("Skipping {0}, {1} from mapping".format(bm,tid))
