@@ -117,8 +117,7 @@ def work():
         for bm,tid in cont_obs['Beam','ObsID']:
             print("Checking before mapping")
             #first check if output exists
-            beam = "{}:02d".format(bm)
-            beam_outputdir = os.path.join(args.outputdir,pbname,beam)
+            beam_outputdir = os.path.join(args.outputdir,pbname,"{:02d}".format(bm))
             match_output = os.path.join(beam_outputdir,
                                         "{0}_matches.csv".format(tid))
             if not os.path.exists(match_output):
