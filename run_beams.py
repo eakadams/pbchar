@@ -66,7 +66,7 @@ if os.path.isdir(args.workingdir):
     #delete
     print("Deleting working directory before start")
     print(args.workingdir)
-    print("shutil.rmtree(args.workingdir,ignore_errors = True)")
+    shutil.rmtree(args.workingdir,ignore_errors = True)
     
 
 #function to setup/run a beam
