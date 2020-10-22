@@ -661,8 +661,9 @@ class Beam(object):
                     nvss_min.append(self.nvss_table['MinAxis'][idx]) #arcsec
                     int_flux_nvss_err.append(self.nvss_table['e_S1.4'][idx]/1000.) #Jy
                     #deconolved apertif size - what is reported in NVSS
-                    ap_maj.append(bdsf_sources['DC_Maj'][i]*3600.) #arcsec
-                    ap_min.append(bdsf_sources['DC_Min'][i]*3600.) #arcsec
+                    #but not sure I trust it, so take measured
+                    ap_maj.append(bdsf_sources['Maj'][i]*3600.) #arcsec
+                    ap_min.append(bdsf_sources['Min'][i]*3600.) #arcsec
                     int_flux_ap_err.append(bdsf_sources['E_Total_flux'][i])
                     peak_flux_ap_err.append(bdsf_sources['E_Peak_flux'][i])
 
