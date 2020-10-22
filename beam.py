@@ -27,6 +27,7 @@ from astropy.io import ascii
 from astropy.io import fits
 from astropy.table import Table
 from astropy import units as u
+import numpy as np
 
 
 #import glob
