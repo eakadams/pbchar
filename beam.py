@@ -666,11 +666,16 @@ class Beam(object):
                     int_flux_ap_err.append(bdsf_sources['E_Total_flux'][i])
                     peak_flux_ap_err.append(bdsf_sources['E_Peak_flux'][i])
 
-            self.match_table = Table([peak_flux_ap, int_flux_ap,
-                                  int_flux_nvss,
+            self.match_table = Table([peak_flux_ap, peak_flux_ap_err,
+                                      int_flux_ap, int_flux_ap_err,
+                                      int_flux_nvss, int_flux_nvss_err,
+                                      ap_maj,ap_min,nvss_major,nvss_minor,
                                       deltara,deltadec,radius,pb_level],
-                                     names=('peak_flux_ap','int_flux_ap',
-                                            'int_flux_nvss','delta_ra',
+                                     names=('peak_flux_ap','peak_flux_ap_err',
+                                            'int_flux_ap','int_flux_ap_err',
+                                            'int_flux_nvss', 'int_flux_nvss_err',
+                                            'maj_ap','min_ap','maj_nvss','min_nvss',
+                                            'delta_ra',
                                             'delta_dec','radius','pb_level'))
         else:
             print("No bdsf output so skip cross-matching")
