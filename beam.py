@@ -599,6 +599,14 @@ class Beam(object):
             deltadec = [] #delta dec (Apertif) from image center
             radius = [] #distance from field center
             pb_level = [] #primary beam response at same position
+            #add additional values interested in
+            nvss_maj = []
+            nvss_min = []
+            int_flux_nvss_err = []
+            ap_maj = []
+            ap_min = []
+            int_flux_ap_err = []
+            peak_flux_ap_err = []
 
             #get NVSS skycoord object
             #print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
@@ -648,7 +656,15 @@ class Beam(object):
                     ypix = int(bdsf_sources['Yposn'][i]) - 1 #0-index; force interger pixel
                     pbval = pbdata[ypix,xpix] #axes reversed
                     pb_level.append(pbval)
-
+                    #add new vals
+                    nvss_maj.append(self.nvss_table['MajAxis'][idx]) #arcsec
+                    nvss_min.append(self.nvss_table['MinAxis'][idx]) #arcsec
+                    int_flux_nvss_err.append(self.nvss_table['e_S1.4'][idx]/1000.) #Jy
+                    #deconolved apertif size - what is reported in NVSS
+                    ap_maj.append(bdsf_sources['DC_Maj'][i]*3600.) #arcsec
+                    ap_min.append(bdsf_sources['DC_Min'][i]*3600.) #arcsec
+                    int_flux_ap_err.append(bdsf_sources['E_Total_flux'][i])
+                    peak_flux_ap_err.append(bdsf_sources['E_Peak_flux'][i])
 
             self.match_table = Table([peak_flux_ap, int_flux_ap,
                                   int_flux_nvss,
