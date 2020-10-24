@@ -25,18 +25,24 @@ pbchardir = this_dir
 filedir = os.path.join(pbchardir,"files")
 figdir = os.path.join(pbchardir,"figures")
 
+#get mpl colors
+prop_cycle = plt.rcParams['axes.prop_cycle']
+mpcolors = prop_cycle.by_key()['color']
+
 #create PB object
 class PB(object):
     def __init__(self,
                  matchfile,
                  startdate = None,
-                 enddate = None):
+                 enddate = None,
+                 N=20):
         """
         Initialize PB object
         Inputs:
         - matchfile (str): Path of matchfile with all cross-match info
         - startdate (str): YYMMDD, start date to make time-limited set of plots
         - enddate (str): YYMMDD, end date to make time-limited set of plots
+        - N (int): number of sources to average over for binnning / running mean 
         """
         #read in match file
         self.matches = ascii.read(matchfile,format='csv')
@@ -52,6 +58,9 @@ class PB(object):
         #add start and end date as attributes
         self.startdate = startdate
         self.enddate = enddate
+
+        #add number of sources to use for running mean / binning
+        self.N = N
 
         #get a limited set of matches if date ranges are set
         #initialize attribute
@@ -122,7 +131,7 @@ class PB(object):
             pb_level = self.matches_date_range['pb_level']
             radius = self.matches_date_range['radius']
             figname = ("oned_B{1}_{0}_{2}_{3}"
-                       ".png").format(self.pbname,self.beam,
+                       ".pdf").format(self.pbname,self.beam,
                                       self.startdate,self.enddate)
         else:
             peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
@@ -131,49 +140,49 @@ class PB(object):
             delta_dec = self.matches['delta_dec']
             pb_level = self.matches['pb_level']
             radius = self.matches['radius']
-            figname = "oned_B{1}_{0}.png".format(self.pbname,self.beam)
+            figname = "oned_B{1}_{0}.pdf".format(self.pbname,self.beam)
         #setup figure; 4 plots, peak & int
         fig, axes = plt.subplots(4,2,figsize = (10,20),
                                  sharex = 'row',
                                  sharey = 'col')
 
         #plot function of radius
-        ax1 = plot_oned_panel(axes[0,0],radius,peak_ratio)
+        ax1 = self.plot_oned_panel(axes[0,0],radius,peak_ratio)
         ax1.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax1.set_xlabel('Radius [arcmin]')
         ax1.set_title('Apertif peak / NVSS int')
 
-        ax2 = plot_oned_panel(axes[0,1],radius,int_ratio)
+        ax2 = self.plot_oned_panel(axes[0,1],radius,int_ratio)
         ax2.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax2.set_xlabel('Radius [arcmin]')
         ax2.set_title('Apertif int / NVSS int')
 
         #plot function pb level
-        ax3 = plot_oned_panel(axes[1,0],pb_level,peak_ratio)
+        ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio, reverse=True)
         ax3.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax3.set_xlabel('Primary beam response level')
-        ax3.set_xlim(1.0,0.1)
+        #ax3.set_xlim(1.0,0.1)
 
-        ax4 = plot_oned_panel(axes[1,1],pb_level,int_ratio)
+        ax4 = self.plot_oned_panel(axes[1,1],pb_level,int_ratio, reverse=True)
         ax4.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax4.set_xlabel('Primary beam response level')
-        ax4.set_xlim(1.0,0.1)
+        #ax4.set_xlim(1.0,0.1)
 
         #plot function ra offset
-        ax5 = plot_oned_panel(axes[2,0],delta_ra,peak_ratio)
+        ax5 = self.plot_oned_panel(axes[2,0],delta_ra,peak_ratio)
         ax5.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax5.set_xlabel('Delta RA [arcmin]')
 
-        ax6 = plot_oned_panel(axes[2,1],delta_ra,int_ratio)
+        ax6 = self.plot_oned_panel(axes[2,1],delta_ra,int_ratio)
         ax6.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax6.set_xlabel('Delta RA [arcmin]')
 
         #plot function dec offset
-        ax7 = plot_oned_panel(axes[3,0],delta_dec,peak_ratio)
+        ax7 = self.plot_oned_panel(axes[3,0],delta_dec,peak_ratio)
         ax7.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax7.set_xlabel('Delta Dec [arcmin]')
 
-        ax8 = plot_oned_panel(axes[3,1],delta_dec,int_ratio)
+        ax8 = self.plot_oned_panel(axes[3,1],delta_dec,int_ratio)
         ax8.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax8.set_xlabel('Delta Dec [arcmin]')
         
@@ -183,6 +192,32 @@ class PB(object):
 
         #close figure to be safe
         plt.close('all')
+        
+    def plot_oned_panel(self,ax,x,y,reverse=False):
+        """
+        Helper function that takes x, y arrays for a
+        fig/ax pair and does the plotting
+        Since I'm doing a lot of repetitive plotting
+        Optionally reverse axes; used for PB level
+        """
+        xs, ys_mean = running_mean(x,y,self.N)
+        ax.scatter(x,y,marker='.',c=mpcolors[0], s=5)
+        #ax.plot(xs,ys_mean,
+        #        label='Running mean over {} sources'.format(self.N),
+        #        color=mpcolors[1])
+        ax.plot([np.min(x),np.max(x)],[1,1],color='black')
+        ax.plot([np.min(x),np.max(x)],[1.2,1.2],color='black',linestyle='--')
+        ax.plot([np.min(x),np.max(x)],[0.8,0.8],color='black',linestyle='--')
+        #add getting binned points and scatter
+        xb,xbr,yb,ybsc = bin_scatter(x,y,self.N,reverse=reverse)
+        ax.errorbar(xb,yb,xerr=xbr,yerr=ybsc,fmt='.',
+                    color=mpcolors[1])
+
+        if reverse:
+            #only do this for pblevel, so can set explicitly
+            ax.set_xlim(1.0,0.1)
+
+        return ax
 
 
     def position_plots(self,daterange=False):
@@ -231,6 +266,11 @@ class PB(object):
 
         plt.close('all')
 
+    def pb_level_plots(self,daterange=False):
+        """
+        Focus on plots
+        """
+
 def running_mean(x,y,N):
     #cumsum = np.cumsum(np.insert(x,0,0))
     #return (cumsum[N:] - cumsum[:-N]) / float(N)
@@ -240,18 +280,28 @@ def running_mean(x,y,N):
     y_running_mean = np.convolve(y_sorted, np.ones((N,))/N, mode='same')
     return x_sorted,y_running_mean
 
-def plot_oned_panel(ax,x,y):
+def bin_scatter(x,y,N,reverse=False):
     """
-    Helper function that takes x, y arrays for a
-    fig/ax pair and does the plotting
-    Since I'm doing a lot of repetitive plotting
+    Take matched x,y arrays and bin by N sources
+    Return xb,yb arrays of binned values
+    Plus xbr, range that binned array covers
+    And ybsc, scatter in the y-direction w/in bin
+    If set, reverse axes in sorting
     """
-    xs, ys_mean = running_mean(x,y,20)
-    ax.scatter(x,y,marker='.')
-    ax.plot(xs,ys_mean,label='Running mean over 20 sources',
-            color='red')
-    ax.plot([np.min(x),np.max(x)],[1,1],color='black')
-    ax.plot([np.min(x),np.max(x)],[1.2,1.2],color='black',linestyle='--')
-    ax.plot([np.min(x),np.max(x)],[0.8,0.8],color='black',linestyle='--')
+    #first sort by x-array
+    if reverse:
+        x_inds = x.argsort()[::-1]
+    else:
+        x_inds = x.argsort()
+    y_sorted = y[x_inds]
+    x_sorted = x[x_inds]
+    #do the binning by reshaping array
+    #drop last bin if needed
+    x_bin_shape = x_sorted[:(x_sorted.size // N) * N].reshape(-1, N)
+    y_bin_shape = y_sorted[:(y_sorted.size // N) * N].reshape(-1, N)
+    yb = y_bin_shape.mean(axis=1)
+    ybsc = y_bin_shape.std(axis=1)
+    xbr = (x_bin_shape.max(axis=1) - x_bin_shape.min(axis=1))/2
+    xb = x_bin_shape.min(axis=1) + xbr
 
-    return ax
+    return xb,xbr,yb,ybsc
