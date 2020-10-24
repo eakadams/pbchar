@@ -193,7 +193,7 @@ class PB(object):
         #close figure to be safe
         plt.close('all')
         
-    def plot_oned_panel(self,ax,x,y,reverse=False):
+    def plot_oned_panel(self,ax,x,y,reverse=False,xbin=None):
         """
         Helper function that takes x, y arrays for a
         fig/ax pair and does the plotting
@@ -209,7 +209,7 @@ class PB(object):
         ax.plot([np.min(x),np.max(x)],[1.2,1.2],color='black',linestyle='--')
         ax.plot([np.min(x),np.max(x)],[0.8,0.8],color='black',linestyle='--')
         #add getting binned points and scatter
-        xb,xbr,yb,ybsc = bin_scatter(x,y,self.N,reverse=reverse)
+        xb,xbr,yb,ybsc = bin_scatter(x,y,self.N,reverse=reverse,xbin=xbin)
         ax.errorbar(xb,yb,xerr=xbr,yerr=ybsc,fmt='.',
                     color=mpcolors[1])
 
@@ -268,8 +268,58 @@ class PB(object):
 
     def pb_level_plots(self,daterange=False):
         """
-        Focus on plots
+        Focus on plots based on primary beam levels
+        Best way to characterize things to give information to people
         """
+        #get variables, based on date range
+        if daterange:
+            peak_ratio = ( self.matches_date_range['peak_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
+            int_ratio = ( self.matches_date_range['int_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
+            pb_level = self.matches_date_range['pb_level']
+            figname = ("pblevel_B{1}_{0}_{2}_{3}"
+                       ".pdf").format(self.pbname,self.beam,
+                                      self.startdate,self.enddate)
+        else:
+            peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+            int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+            pb_level = self.matches['pb_level']
+            figname = "pblevel_B{1}_{0}.pdf".format(self.pbname,self.beam)
+        #setup figure; N source binning, plus equal pblevel binning, peak & int
+        fig, axes = plt.subplots(2,2,figsize = (10,10),
+                                 sharex = 'row',
+                                 sharey = 'col')
+
+        #plot N source binning
+        ax1 = self.plot_oned_panel(axes[0,0],pb_level,peak_ratio,reverse=True)
+        ax1.set_ylabel('Apertif peak flux / NVSS integrated flux')
+        ax1.set_xlabel('Primary beam response level')
+        ax1.set_title('Apertif peak / NVSS int')
+
+        ax2 = self.plot_oned_panel(axes[0,1],pb_level,int_ratio,reverse=True)
+        ax2.set_ylabel('Apertif total flux / NVSS integrated flux')
+        ax2.set_xlabel('Primary beam response level')
+        ax2.set_title('Apertif int / NVSS int')
+
+        #plot equal pb level binning
+        xbins = np.arange(0.1,1.1,0.1)
+        print(xbins)
+        ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio,
+                                   xbin=xbins,reverse=True)
+        ax3.set_ylabel('Apertif peak flux / NVSS integrated flux')
+        ax3.set_xlabel('Primary beam response level')
+
+        ax4 = self.plot_oned_panel(axes[1,1],pb_level,int_ratio,
+                                   xbin=xbins,reverse=True)
+        ax4.set_ylabel('Apertif int flux / NVSS integrated flux')
+        ax4.set_xlabel('Primary beam response level')
+
+        figpath = os.path.join(figdir,figname)
+        plt.savefig(figpath)
+
+        plt.close('all')
+        
 
 def running_mean(x,y,N):
     #cumsum = np.cumsum(np.insert(x,0,0))
@@ -280,13 +330,14 @@ def running_mean(x,y,N):
     y_running_mean = np.convolve(y_sorted, np.ones((N,))/N, mode='same')
     return x_sorted,y_running_mean
 
-def bin_scatter(x,y,N,reverse=False):
+def bin_scatter(x,y,N,reverse=False,xbin=None):
     """
     Take matched x,y arrays and bin by N sources
     Return xb,yb arrays of binned values
     Plus xbr, range that binned array covers
     And ybsc, scatter in the y-direction w/in bin
     If set, reverse axes in sorting
+    xbin can be used to set xbins for other type of binning
     """
     #first sort by x-array
     if reverse:
@@ -295,13 +346,31 @@ def bin_scatter(x,y,N,reverse=False):
         x_inds = x.argsort()
     y_sorted = y[x_inds]
     x_sorted = x[x_inds]
-    #do the binning by reshaping array
-    #drop last bin if needed
-    x_bin_shape = x_sorted[:(x_sorted.size // N) * N].reshape(-1, N)
-    y_bin_shape = y_sorted[:(y_sorted.size // N) * N].reshape(-1, N)
-    yb = y_bin_shape.mean(axis=1)
-    ybsc = y_bin_shape.std(axis=1)
-    xbr = (x_bin_shape.max(axis=1) - x_bin_shape.min(axis=1))/2
-    xb = x_bin_shape.min(axis=1) + xbr
+    #either bin by Nsources or equal xbins
+    if xbin is None:
+        #bin by  Nsources together
+        #do the binning by reshaping array
+        #drop last bin if needed
+        x_bin_shape = x_sorted[:(x_sorted.size // N) * N].reshape(-1, N)
+        y_bin_shape = y_sorted[:(y_sorted.size // N) * N].reshape(-1, N)
+        yb = y_bin_shape.mean(axis=1)
+        ybsc = y_bin_shape.std(axis=1)
+        xbr = (x_bin_shape.max(axis=1) - x_bin_shape.min(axis=1))/2
+        xb = x_bin_shape.min(axis=1) + xbr
+    else:
+        #do histogram binning and find scatter
+        n, bins = np.histogram(x, bins=xbin)
+        sy, bins = np.histogram(x, bins=xbin, weights=y)
+        sy2, bins = np.histogram(x, bins=xbin, weights=y*y)
+        mean = sy / n
+        ybsc = np.sqrt(sy2/n - mean*mean)
+        yb = mean
+        print(bins)
+        print(len(n),len(bins))
+        #find midpoint
+        xb = (bins[1:] + bins[:-1])/2
+        #get range
+        xbr = (bins[1:] - bins[:-1])/2
+        
 
     return xb,xbr,yb,ybsc
