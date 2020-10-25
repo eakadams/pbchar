@@ -304,7 +304,6 @@ class PB(object):
 
         #plot equal pb level binning
         xbins = np.arange(0.1,1.1,0.1)
-        print(xbins)
         ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio,
                                    xbin=xbins,reverse=True)
         ax3.set_ylabel('Apertif peak flux / NVSS integrated flux')
@@ -319,7 +318,53 @@ class PB(object):
         plt.savefig(figpath)
 
         plt.close('all')
-        
+
+    def get_scatter_pblev(self,lev,daterange=False):
+        """
+        Get scatter as a function of lev
+        Want to get scatter both for equally spaced bins 
+        and bins by N sources
+        """
+        #get variables, based on date range
+        if daterange:
+            peak_ratio = ( self.matches_date_range['peak_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
+            int_ratio = ( self.matches_date_range['int_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
+            pb_level = self.matches_date_range['pb_level']
+        else:
+            peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+            int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+            pb_level = self.matches['pb_level']
+
+        #get various scatter values for given lev
+        xbins = np.arange(0.1,1.1,0.1)
+        sc_N_peak = scatter_val(pb_level,peak_ratio,self.N,lev,
+                                xbin=None,reverse=True)
+        sc_bin_peak = scatter_val(pb_level,peak_ratio,self.N,lev,xbin=xbins)
+        sc_N_int = scatter_val(pb_level,int_ratio,self.N,lev,
+                               xbin=None,reverse=True)
+        sc_bin_int = scatter_val(pb_level,int_ratio,self.N,lev,xbin=xbins)
+
+        return sc_N_peak, sc_bin_peak, sc_N_int, sc_bin_int
+
+def scatter_val(x,y,N,val,xbin=None,reverse=False):
+    """
+    Get scatter for given val (x-array)
+    """
+    xb,xbr,yb,ybsc = bin_scatter(x,y,N,xbin=xbin,reverse=reverse)
+    xlow = xb-xbr
+    xhigh = xb+xbr
+    ind1 = np.where(xlow <= val)[0]
+    ind2 = np.where(xhigh > val)[0]
+    ind = np.intersect1d(ind1,ind2)
+    if len(ind) is None:
+        print("PB level not found")
+    else:
+        sc_lev = ybsc[ind]
+
+    return sc_lev
+    
 
 def running_mean(x,y,N):
     #cumsum = np.cumsum(np.insert(x,0,0))
@@ -365,8 +410,6 @@ def bin_scatter(x,y,N,reverse=False,xbin=None):
         mean = sy / n
         ybsc = np.sqrt(sy2/n - mean*mean)
         yb = mean
-        print(bins)
-        print(len(n),len(bins))
         #find midpoint
         xb = (bins[1:] + bins[:-1])/2
         #get range
