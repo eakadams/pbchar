@@ -40,8 +40,8 @@ def collect_info(beam):
     #and export it
     pbname = os.path.basename(args.PBdir)
     output = os.path.join(filedir,"{0}_{1:02d}.csv".format(pbname,beam))
-    #for testing
-    output = os.path.join(filedir,'test_{:02d}.csv'.format(beam))
+    ##for testing
+    #output = os.path.join(filedir,'test_{:02d}.csv'.format(beam))
     combined_csv.to_csv( output, index=False )
 
     ####set up empty arrays to hold things
