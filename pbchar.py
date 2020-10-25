@@ -267,7 +267,7 @@ class PB(object):
 
         plt.close('all')
 
-    def pb_level_plots(self,daterange=False):
+    def pb_level_plots(self,daterange=False,xbins = np.arange(0.15,1.1,0.1)):
         """
         Focus on plots based on primary beam levels
         Best way to characterize things to give information to people
@@ -304,7 +304,7 @@ class PB(object):
         ax2.set_title('Apertif int / NVSS int')
 
         #plot equal pb level binning
-        xbins = np.arange(0.1,1.1,0.1)
+        
         ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio,
                                    xbin=xbins,reverse=True)
         ax3.set_ylabel('Apertif peak flux / NVSS integrated flux')
@@ -321,7 +321,7 @@ class PB(object):
         plt.close('all')
 
     def get_scatter_pblev(self,lev,daterange=False,
-                          xbins=np.arange(0.1,1.1,0.1),
+                          xbins=np.arange(0.15,1.1,0.1),
                           mode='int'):
         """
         Get scatter as a function of lev
