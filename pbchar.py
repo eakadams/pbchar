@@ -104,7 +104,8 @@ class PB(object):
         #make plots
         self.position_plots()
         self.oned_plots()
-
+        self.pb_level_plots()
+        
         #make second time if date range is set
         if self.matches_date_range is not None:
             self.position_plots(daterange=True)
@@ -319,11 +320,16 @@ class PB(object):
 
         plt.close('all')
 
-    def get_scatter_pblev(self,lev,daterange=False):
+    def get_scatter_pblev(self,lev,daterange=False,
+                          xbins=np.arange(0.1,1.1,0.1),
+                          mode='int'):
         """
         Get scatter as a function of lev
         Want to get scatter both for equally spaced bins 
         and bins by N sources
+        Can specify bins
+        Also whether do for more 'int' or 'peak' flux
+        Default int
         """
         #get variables, based on date range
         if daterange:
@@ -337,33 +343,76 @@ class PB(object):
             int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
             pb_level = self.matches['pb_level']
 
-        #get various scatter values for given lev
-        xbins = np.arange(0.1,1.1,0.1)
-        sc_N_peak = scatter_val(pb_level,peak_ratio,self.N,lev,
-                                xbin=None,reverse=True)
-        sc_bin_peak = scatter_val(pb_level,peak_ratio,self.N,lev,xbin=xbins)
-        sc_N_int = scatter_val(pb_level,int_ratio,self.N,lev,
-                               xbin=None,reverse=True)
-        sc_bin_int = scatter_val(pb_level,int_ratio,self.N,lev,xbin=xbins)
+        if mode == 'peak':
+            ratio = peak_ratio
+        else:
+            ratio = int_ratio
 
-        return sc_N_peak, sc_bin_peak, sc_N_int, sc_bin_int
+        #get various scatter values for given lev
+        #xbins = np.arange(0.1,1.1,0.1)
+        sc_N_lev, sc_N_mean = scatter_val(pb_level,ratio,self.N,lev,
+                                          xbin=None,reverse=True)
+        sc_bin_lev, sc_bin_mean = scatter_val(pb_level,ratio,self.N,lev,
+                                              xbin=xbins)
+
+        return sc_N_lev, sc_bin_lev, sc_N_mean, sc_bin_mean
+
+    def get_mean_ratio(self,mode='int',daterange=False):
+        """
+        Get mean value of ratio, for integrated or peak flux
+        """
+         #get variables, based on date range
+        if daterange:
+            peak_ratio = ( self.matches_date_range['peak_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
+            int_ratio = ( self.matches_date_range['int_flux_ap'] /
+                           self.matches_date_range['int_flux_nvss'] )
+        else:
+            peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+            int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+
+        if mode == 'peak':
+            ratio = peak_ratio
+        else:
+            ratio = int_ratio
+
+        #also try to account for standard spectral index
+        #apertif central freq: 1362.5 MHz.
+        #nvss cen freq:
+        #can't easily find, skip this for now
+        #Can update for it later
+            
+        return np.mean(ratio)
 
 def scatter_val(x,y,N,val,xbin=None,reverse=False):
     """
     Get scatter for given val (x-array)
+    Should also return mean value
     """
     xb,xbr,yb,ybsc = bin_scatter(x,y,N,xbin=xbin,reverse=reverse)
-    xlow = xb-xbr
-    xhigh = xb+xbr
+    xlow = np.around(xb-xbr,4)
+    xhigh = np.around(xb+xbr,4)
     ind1 = np.where(xlow <= val)[0]
     ind2 = np.where(xhigh > val)[0]
     ind = np.intersect1d(ind1,ind2)
-    if len(ind) is None:
-        print("PB level not found")
+    if len(ind) == 0:
+        #this happens when bin edges are close to value
+        #due to floating point / rounding errors
+        #find the bin edge that is closest and use it
+        test1 = np.min(ind1)
+        test2 = np.max(ind2)
+        lowval = xlow[test1]
+        highval = xhigh[test2]
+        if abs(highval - val) > abs(lowval-val):
+            sc_lev = ybsc[test1]
+        else:
+            sc_lev = ybsc[test2]
     else:
-        sc_lev = ybsc[ind]
+        sc_lev = ybsc[ind][0]
 
-    return sc_lev
+    mean_sc = np.mean(ybsc)
+
+    return sc_lev, mean_sc
     
 
 def running_mean(x,y,N):
