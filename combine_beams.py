@@ -17,6 +17,7 @@ import os
 import glob
 import numpy as np
 from astropy.table import Table
+import pandas as pd
 
 #get global level paths
 this_dir,this_filename = os.path.split(__file__)
@@ -34,40 +35,49 @@ def collect_info(beam):
     beamdir = os.path.join(args.PBdir,"{0:02d}".format(beam))
     #get list of csv files for each tid
     tid_csv_list = glob.glob(os.path.join(beamdir,"*matches.csv"))
-    #set up empty arrays to hold things
-    tid_array = np.array([])
-    peak_flux_array = np.array([])
-    int_flux_array = np.array([])
-    int_flux_nvss_array = np.array([])
-    delta_ra_array = np.array([])
-    delta_dec_array = np.array([])
-    radius_array = np.array([])
-    pb_level_array = np.array([])
-    #iterate through matches and append to arrays
-    for tid_csv in tid_csv_list:
-        tid_csv_name = os.path.basename(tid_csv)
-        tid = tid_csv_name[0:9]
-        t = ascii.read(tid_csv,format='csv')
-        tmp_tid_array = np.full(len(t),tid)
-        tid_array = np.append(tid_array,tmp_tid_array)
-        peak_flux_array = np.append(peak_flux_array,t['peak_flux_ap'])
-        int_flux_array = np.append(int_flux_array,t['int_flux_ap'])
-        int_flux_nvss_array = np.append(int_flux_nvss_array,t['int_flux_nvss'])
-        delta_ra_array = np.append(delta_ra_array,t['delta_ra'])
-        delta_dec_array = np.append(delta_dec_array,t['delta_dec'])
-        radius_array = np.append(radius_array,t['radius'])
-        pb_level_array = np.append(pb_level_array,t['pb_level'])
-    #put info into a table
-    combined_beam_table = Table([tid_array,peak_flux_array,int_flux_array,
-                                int_flux_nvss_array,delta_ra_array,
-                                delta_dec_array,radius_array,pb_level_array],
-                                names = ('ObsID','peak_flux_ap','int_flux_ap',
-                                            'int_flux_nvss','delta_ra',
-                                            'delta_dec','radius','pb_level'))
-    #write table to pbchar, filedir
+    #use pandas to join csv files; don't have to know headers, just the same
+    combined_csv = pd.concat( [ pd.read_csv(f) for f in tid_csv_list ] )
+    #and export it
     pbname = os.path.basename(args.PBdir)
     output = os.path.join(filedir,"{0}_{1:02d}.csv".format(pbname,beam))
-    ascii.write(combined_beam_table,output,format='csv',overwrite=True)
+    #for testing
+    output = os.path.join(filedir,'test_{:02d}.csv'.format(beam))
+    combined_csv.to_csv( output, index=False )
+
+    ####set up empty arrays to hold things
+    ###tid_array = np.array([])
+    ###peak_flux_array = np.array([])
+    ###int_flux_array = np.array([])
+    ###int_flux_nvss_array = np.array([])
+    ###delta_ra_array = np.array([])
+    ###delta_dec_array = np.array([])
+    ###radius_array = np.array([])
+    ###pb_level_array = np.array([])
+    ####iterate through matches and append to arrays
+    ###for tid_csv in tid_csv_list:
+    ###    tid_csv_name = os.path.basename(tid_csv)
+    ###    tid = tid_csv_name[0:9]
+    ###    t = ascii.read(tid_csv,format='csv')
+    ###    tmp_tid_array = np.full(len(t),tid)
+    ###    tid_array = np.append(tid_array,tmp_tid_array)
+    ###    peak_flux_array = np.append(peak_flux_array,t['peak_flux_ap'])
+    ###    int_flux_array = np.append(int_flux_array,t['int_flux_ap'])
+    ###    int_flux_nvss_array = np.append(int_flux_nvss_array,t['int_flux_nvss'])
+    ###    delta_ra_array = np.append(delta_ra_array,t['delta_ra'])
+    ###    delta_dec_array = np.append(delta_dec_array,t['delta_dec'])
+    ###    radius_array = np.append(radius_array,t['radius'])
+    ###    pb_level_array = np.append(pb_level_array,t['pb_level'])
+    ####put info into a table
+    ###combined_beam_table = Table([tid_array,peak_flux_array,int_flux_array,
+    ###                            int_flux_nvss_array,delta_ra_array,
+    ###                            delta_dec_array,radius_array,pb_level_array],
+    ###                            names = ('ObsID','peak_flux_ap','int_flux_ap',
+    ###                                        'int_flux_nvss','delta_ra',
+    ###                                        'delta_dec','radius','pb_level'))
+    ####write table to pbchar, filedir
+    ###pbname = os.path.basename(args.PBdir)
+    ###output = os.path.join(filedir,"{0}_{1:02d}.csv".format(pbname,beam))
+    ###ascii.write(combined_beam_table,output,format='csv',overwrite=True)
     
     
 if __name__ == '__main__':
