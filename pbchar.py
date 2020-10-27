@@ -18,6 +18,9 @@ from astropy.io import ascii
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from scipy.stats import norm
+import matplotlib.mlab as mlab
+
 
 #define global directories
 this_dir,this_filename = os.path.split(__file__)
@@ -105,6 +108,7 @@ class PB(object):
         self.position_plots()
         self.oned_plots()
         self.pb_level_plots()
+        self.plot_hist_peak()
         
         #make second time if date range is set
         if self.matches_date_range is not None:
@@ -394,6 +398,175 @@ class PB(object):
 
         plt.close('all')
 
+    def plot_hist_peak(self,daterange=False):
+        """
+        Plot histograms of flux ratios
+        If daterange is set, do that as another histogram in same plot
+        Not turned on yet (lazy, not really using this feature)
+        Would be better to set date range globally and just update matches
+        Add more plots - peak to see about size bias
+        And filtering by NVSS size
+        Also limit bins to 0.5-1.5 to avoid outliers
+        """
+        peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+        int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+        pb_level = self.matches['pb_level']
+        figname = "flux_ratio_hist_B{1}_{0}.pdf".format(self.pbname,self.beam)
+
+        fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (10,10))
+
+        #do integrated flux ratio
+        #do norm fitting
+        (mu, sigma) = norm.fit(int_ratio)
+        #normalize histogram for fitting
+        n, bins, patches = ax1.hist(int_ratio,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax1.set_xlabel('Apertif int flux / NVSS int flux')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax1.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(int_ratio[ind_main])
+        n, bins, patches =ax1.hist(int_ratio[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax1.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+
+        ax1.set_ylim(0,4.5)
+        ax1.set_xlim(0.2,2.5)
+        
+        ax1.legend()
+
+        #do peak flux ratio
+        #do norm fitting
+        (mu, sigma) = norm.fit(peak_ratio)
+        #normalize histogram for fitting
+        n, bins, patches = ax2.hist(peak_ratio,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax2.set_xlabel('Apertif peak flux / NVSS int flux')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax2.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(peak_ratio[ind_main])
+        n, bins, patches =ax2.hist(peak_ratio[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax2.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+
+        ax2.set_ylim(0,4.5)
+        ax2.set_xlim(0.2,2.5)
+        
+        ax2.legend()
+
+
+        #do integrated flux ratio w/ limited size
+        ind40 = np.where(self.matches['maj_nvss'] <= 40.)[0]
+        int_ratio_40 = int_ratio[ind40]
+        pb_level_40 = pb_level[ind40]
+        (mu, sigma) = norm.fit(int_ratio_40)
+        n, bins, patches = ax3.hist(int_ratio_40,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax3.set_xlabel('Apertif int flux / NVSS int flux')
+        ax3.set_title('NVSS major axis <= 40"')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax3.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level_40 >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(int_ratio_40[ind_main])
+        n, bins, patches =ax3.hist(int_ratio_40[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax3.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+        ax3.set_ylim(0,4.5)
+        ax3.set_xlim(0.2,2.5)
+        ax3.legend()
+
+        #do peak flux ratio w/ limited size
+        ind40 = np.where(self.matches['maj_nvss'] <= 40.)[0]
+        peak_ratio_40 = peak_ratio[ind40]
+        pb_level_40 = pb_level[ind40]
+        (mu, sigma) = norm.fit(peak_ratio_40)
+        n, bins, patches = ax4.hist(peak_ratio_40,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax4.set_xlabel('Apertif peak flux / NVSS int flux')
+        ax4.set_title('NVSS major axis <= 40"')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax4.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level_40 >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(peak_ratio_40[ind_main])
+        n, bins, patches =ax4.hist(peak_ratio_40[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax4.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+        ax4.set_ylim(0,4.5)
+        ax4.set_xlim(0.2,2.5)
+        ax4.legend()
+
+        
+
+        figpath = os.path.join(figdir,figname)
+        plt.savefig(figpath)
+
+        plt.close('all')
+    
     def get_scatter_pblev(self,lev,daterange=False,
                           xbins=np.arange(0.15,1.1,0.1),
                           mode='int'):
