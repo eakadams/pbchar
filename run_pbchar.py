@@ -53,10 +53,13 @@ if __name__ == '__main__':
     #40 rows, one for each beam
     N = 40
     #set up columns
+    #updating table for new way of looking at values/errors
     dtype = [('beam','i4'),('mean_flux_ratio','f8'),
-             ('sc_N_50','f8'),('sc_N_mean','f8'),
-             ('sc_bin_50','f8'),('sc_bin_mean','f8')]
+             ('median_flux_ratio','f8'),('std_flux_ratio','f8'),
+             ('mean_error','f8'),('median_error','f8')]
+    #two tables; one all vals, one 50%
     t = Table(data = np.zeros(N,dtype=dtype))
+    t50 = Table(data = np.zeros(N,dtype=dtype))
     
     #run in serial per beam
     #weird issues with matplotlib / backend
@@ -71,27 +74,50 @@ if __name__ == '__main__':
         #get plots
         CB.go()
         #get scatter values for table
-        (sc_N_50, sc_bin_50, sc_N_mean,
-         sc_bin_mean) = CB.get_scatter_pblev(0.5,xbins = np.arange(0.15,1.1,0.1),
-                                             mode = 'int')
-        #get mean ratio value for table
-        mean_flux_ratio = CB.get_mean_ratio(mode='int')
+        *ratio_vals = CB.get_ratio_vals()
+        *ratio_vals_50 = CB.get_ratio_vals(level=0.5)
         
         #set trable row values
-        t[bm] = (bm,mean_flux_ratio,
-                 sc_N_50,sc_N_mean,
-                 sc_bin_50,sc_bin_mean)
+        t[bm] = (bm,ratio_vals)
+        t50[bm] = (bm,ratio_vals_50)
 
     #write table out
-    tablename = "flux_ratio_mean_scatter_{}.csv".format(args.matchfilebase)
+    tablename = "ratio_values_{}.csv".format(args.matchfilebase)
     tablepath = os.path.join(args.path,tablename)
-    t.write(tablepath, format='csv',overwrite=True,
-            formats = {'mean_flux_ratio': '4.2f',
-                       'sc_N_50':'4.2f','sc_N_mean':'4.2f',
-                       'sc_bin_50':'4.2f','sc_bin_mean':'4.2f'})
-        
-    
-                    
+    tablename50 = "ratio_values_50_{}.csv".format(args.matchfilebase)
+    tablepath50 = os.path.join(args.path,tablename)
+    t.write(tablepath, format='csv',overwrite=True)
+    t50.write(tablepath50, format='csv',overwrite=True)
 
+    #make some plots
+    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,5))
+    #plot ratio values
+    ax1.scatter(t['bm'],t['mean_flux_ratio'],label='Mean flux ratio')
+    ax1.scatter(t['bm'],t['median_flux_ratio'],label='Median flux ratio')
+    ax1.scatter(t50['bm'],t50['mean_flux_ratio'],
+                label='Mean flux ratio; >=50%')
+    ax1.scatter(t50['bm'],t50['median_flux_ratio'],
+                label='Median flux ratio; >=50%')
+    ax1.set_xlabel('Beam')
+    ax1.set_ylabel('Integrated flux ratio Apertif / NVSS')
+    ax1.legend()
+
+    #plot error/scatter values
+    ax2.scatter(t['bm'],t['std_flux_ratio'],label='Scatter flux ratio')
+    ax2.scatter(t['bm'],t['mean_error'],label='Mean error flux ratio')
+    ax2.scatter(t['bm'],t['median_error'],label='Median error flux ratio')
+    ax2.scatter(t50['bm'],t50['mean_error'],
+                label='Mean error flux ratio; >=50%')
+    ax2.scatter(t50['bm'],t50['median_error'],
+                label='Median error flux ratio; >=50%')
+    ax2.scatter(t50['bm'],t50['std_flux_ratio'],label='Scatter flux ratio; >=50%')
+    ax2.set_xlabel('Beam')
+    ax2.set_ylabel('Uncertainty Apertif/NVSS int flux')
+    ax2.legend()
+
+    #save figure!
+    figpath = os.path.join(figdir,"ratio_vals.pdf")
+    plt.savefig(figpath)
+    plt.close('all')
     
 

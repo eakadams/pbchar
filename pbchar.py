@@ -398,6 +398,48 @@ class PB(object):
 
         plt.close('all')
 
+    def get_ratio_vals(self, mode='int', level = None):
+        """
+        Get mean, median, std and mean/median error
+        Do just for integrated flux ratio; can toggle for peak
+        Also for level; None is everything
+        """
+        peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+        int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+        pb_level = self.matches['pb_level']
+        peak_ratio_err = ( peak_ratio *
+                           np.sqrt( (self.matches['peak_flux_ap_err']/
+                                     self.matches['peak_flux_ap'])**2 +
+                                    (self.matches['int_flux_nvss_err']/
+                                     self.matches['int_flux_nvss'])**2 ) )
+        int_ratio_err = ( peak_ratio *
+                          np.sqrt( (self.matches['int_flux_ap_err']/
+                                    self.matches['int_flux_ap'])**2 +
+                                   (self.matches['int_flux_nvss_err']/
+                                    self.matches['int_flux_nvss'])**2 ) )
+        #type of mode working in
+        if mode == 'peak':
+            ratio = peak_ratio
+            error = peak_ratio_err
+        else:
+            ratio = int_ratio
+            error = int_ratio_err
+
+        #if pb level limits
+        if level is not None:
+            ind = np.where(pb_level >= level)[0]
+            ratio =ratio[ind]
+            error = error[ind]
+
+        #get stats
+        mean_ratio = np.mean(ratio)
+        median_ratio = np.median(ratio)
+        std_ratio = np.std(ratio)
+        mean_error =np.mean(error)
+        median_error = np.median(error)
+
+        return mean_ratio,median_ratio,std_ratio,mean_error,median_error
+
     def plot_hist_peak(self,daterange=False):
         """
         Plot histograms of flux ratios
