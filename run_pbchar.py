@@ -15,6 +15,7 @@ from multiprocessing import Pool
 import os
 import numpy as np
 from astropy.table import Table
+import matplotlib.pyplot as plt
 
 #get global level paths
 this_dir,this_filename = os.path.split(__file__)
@@ -72,14 +73,18 @@ if __name__ == '__main__':
         CB = pbchar.PB(matchfile,startdate=args.startdate,
                        enddate=args.enddate)
         #get plots
-        CB.go()
+        #CB.go()
         #get scatter values for table
-        *ratio_vals = CB.get_ratio_vals()
-        *ratio_vals_50 = CB.get_ratio_vals(level=0.5)
+        (mean_ratio,median_ratio,std_ratio,
+         mean_error,median_error) = CB.get_ratio_vals()
+        (mean_ratio_50, median_ratio_50, std_ratio_50,
+         mean_error_50, median_error_50) = CB.get_ratio_vals(level=0.5)
         
         #set trable row values
-        t[bm] = (bm,ratio_vals)
-        t50[bm] = (bm,ratio_vals_50)
+        t[bm] = (bm,mean_ratio,median_ratio,std_ratio,
+                 mean_error,median_error)
+        t50[bm] = (bm,mean_ratio_50, median_ratio_50,
+                   std_ratio_50, mean_error_50, median_error_50)
 
     #write table out
     tablename = "ratio_values_{}.csv".format(args.matchfilebase)
@@ -92,25 +97,42 @@ if __name__ == '__main__':
     #make some plots
     fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,5))
     #plot ratio values
-    ax1.scatter(t['bm'],t['mean_flux_ratio'],label='Mean flux ratio')
-    ax1.scatter(t['bm'],t['median_flux_ratio'],label='Median flux ratio')
-    ax1.scatter(t50['bm'],t50['mean_flux_ratio'],
-                label='Mean flux ratio; >=50%')
-    ax1.scatter(t50['bm'],t50['median_flux_ratio'],
-                label='Median flux ratio; >=50%')
+    ax1.scatter(t['beam'],t['mean_flux_ratio'],
+                label='Mean flux ratio: {:4.2f}'.format(np.mean(
+                    t['mean_flux_ratio'])))
+    ax1.scatter(t['beam'],t['median_flux_ratio'],
+                label='Median flux ratio: {:4.2f}'.format(np.mean(
+                    t['median_flux_ratio'])))
+    ax1.scatter(t50['beam'],t50['mean_flux_ratio'],
+                label='Mean flux ratio >=50% : {:4.2f}'.format(np.mean(
+                    t50['mean_flux_ratio'])))
+    ax1.scatter(t50['beam'],t50['median_flux_ratio'],
+                label='Median flux ratio >=50% : {:4.2f}'.format(np.mean(
+                    t50['median_flux_ratio'])))
     ax1.set_xlabel('Beam')
     ax1.set_ylabel('Integrated flux ratio Apertif / NVSS')
     ax1.legend()
 
     #plot error/scatter values
-    ax2.scatter(t['bm'],t['std_flux_ratio'],label='Scatter flux ratio')
-    ax2.scatter(t['bm'],t['mean_error'],label='Mean error flux ratio')
-    ax2.scatter(t['bm'],t['median_error'],label='Median error flux ratio')
-    ax2.scatter(t50['bm'],t50['mean_error'],
-                label='Mean error flux ratio; >=50%')
-    ax2.scatter(t50['bm'],t50['median_error'],
-                label='Median error flux ratio; >=50%')
-    ax2.scatter(t50['bm'],t50['std_flux_ratio'],label='Scatter flux ratio; >=50%')
+    ax2.scatter(t['beam'],t['std_flux_ratio'],
+                label='Scatter flux ratio : {:4.2f}'.format(np.mean(
+                    t['std_flux_ratio'])))
+    ax2.scatter(t['beam'],t['mean_error'],
+                label='Mean error flux ratio : {:4.2f}'.format(np.mean(
+                    t['mean_error'])))
+    ax2.scatter(t['beam'],t['median_error'],
+                label='Median error flux ratio : {:4.2f}'.format(np.mean(
+                    t['median_error'])))
+    ax2.scatter(t50['beam'],t50['std_flux_ratio'],
+                label='Scatter flux ratio >=50% : {:4.2f}'.format(np.mean(
+                    t50['std_flux_ratio'])))
+    ax2.scatter(t50['beam'],t50['mean_error'],
+                label='Mean error flux ratio >=50% : {:4.2f}'.format(np.mean(
+                    t50['mean_error'])))
+    ax2.scatter(t50['beam'],t50['median_error'],
+                label='Median error flux ratio >=50% : {:4.2f}'.format(np.mean(
+                    t50['median_error'])))
+    
     ax2.set_xlabel('Beam')
     ax2.set_ylabel('Uncertainty Apertif/NVSS int flux')
     ax2.legend()
