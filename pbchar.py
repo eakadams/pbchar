@@ -417,13 +417,29 @@ class PB(object):
                                     self.matches['int_flux_ap'])**2 +
                                    (self.matches['int_flux_nvss_err']/
                                     self.matches['int_flux_nvss'])**2 ) )
+        size = self.matches['maj_nvss']
+        #filter on size
+        #do stricter 45"; resolution convolved to
+        ind  = np.where(size <= 45.)[0]
+        peak_ratio = peak_ratio[ind]
+        int_ratio  = int_ratio[ind]
+        peak_ratio_err = peak_ratio_err[ind]
+        int_ratio_err = int_ratio_err[ind]
+        pb_level = pb_level[ind]
+        size = size[ind]
+        
         #type of mode working in
         if mode == 'peak':
-            ratio = peak_ratio
-            error = peak_ratio_err
+            ind = np.where(peak_ratio_err <= 0.1)[0]
+            ratio = peak_ratio[ind]
+            error = peak_ratio_err[ind]
+            pb_level = pb_level[ind]
         else:
-            ratio = int_ratio
-            error = int_ratio_err
+            #ind = np.where(np.abs(int_ratio-1.1)<0.5)[0]
+            ind = np.where(int_ratio_err <= 0.1)[0]
+            ratio = int_ratio[ind]
+            error = int_ratio_err[ind]
+            pb_level = pb_level[ind]
 
         #if pb level limits
         if level is not None:
