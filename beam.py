@@ -339,6 +339,10 @@ class Beam(object):
         #check if gpall
         if self.pbname == 'gpall':
             pbfits = os.path.join(self.pbdir,"pb_{0}_gpall.fits".format(self.beam))
+        if self.pbname == 'norm':
+            pbfits = os.path.join(self.pbdir,"{0}_norm.fits".format(self.beam))
+        if self.pbname == 'nonorm':
+            pbfits = os.path.join(self.pbdir,"{0}_nonorm.fits".format(self.beam))
 
         #having defined pbfits above,
         #check it exists, retrieve to miriad in workingdir
