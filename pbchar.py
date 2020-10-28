@@ -18,6 +18,9 @@ from astropy.io import ascii
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from scipy.stats import norm
+import matplotlib.mlab as mlab
+
 
 #define global directories
 this_dir,this_filename = os.path.split(__file__)
@@ -105,6 +108,7 @@ class PB(object):
         self.position_plots()
         self.oned_plots()
         self.pb_level_plots()
+        self.plot_hist_peak()
         
         #make second time if date range is set
         if self.matches_date_range is not None:
@@ -134,6 +138,23 @@ class PB(object):
             figname = ("oned_B{1}_{0}_{2}_{3}"
                        ".pdf").format(self.pbname,self.beam,
                                       self.startdate,self.enddate)
+            #get error bars for flux, if they exist
+            #assume one exists if they all do (how I wrote code)
+            if 'int_flux_ap_err' in self.matches.colnames:
+                peak_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches_date_range['peak_flux_ap_err']/
+                                             self.matches_date_range['peak_flux_ap'])**2 +
+                                            (self.matches_date_range['int_flux_nvss_err']/
+                                             self.matches_date_range['int_flux_nvss'])**2 ) )
+                int_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches_date_range['int_flux_ap_err']/
+                                             self.matches_date_range['int_flux_ap'])**2 +
+                                            (self.matches_date_range['int_flux_nvss_err']/
+                                             self.matches_date_range['int_flux_nvss'])**2 ) )
+            else:
+                peak_ratio_err = None
+                int_ratio_err = None
+                
         else:
             peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
             int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
@@ -142,48 +163,71 @@ class PB(object):
             pb_level = self.matches['pb_level']
             radius = self.matches['radius']
             figname = "oned_B{1}_{0}.pdf".format(self.pbname,self.beam)
+            #get error bars for flux, if they exist
+            #assume one exists if they all do (how I wrote code)
+            if 'int_flux_ap_err' in self.matches.colnames:
+                peak_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches['peak_flux_ap_err']/
+                                             self.matches['peak_flux_ap'])**2 +
+                                            (self.matches['int_flux_nvss_err']/
+                                             self.matches['int_flux_nvss'])**2 ) )
+                int_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches['int_flux_ap_err']/
+                                             self.matches['int_flux_ap'])**2 +
+                                            (self.matches['int_flux_nvss_err']/
+                                             self.matches['int_flux_nvss'])**2 ) )
+            else:
+                peak_ratio_err = None
+                int_ratio_err = None
+                
         #setup figure; 4 plots, peak & int
         fig, axes = plt.subplots(4,2,figsize = (10,20),
                                  sharex = 'row',
                                  sharey = 'col')
 
         #plot function of radius
-        ax1 = self.plot_oned_panel(axes[0,0],radius,peak_ratio)
+        ax1 = self.plot_oned_panel(axes[0,0],radius,peak_ratio,yerr=peak_ratio_err)
         ax1.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax1.set_xlabel('Radius [arcmin]')
         ax1.set_title('Apertif peak / NVSS int')
 
-        ax2 = self.plot_oned_panel(axes[0,1],radius,int_ratio)
+        ax2 = self.plot_oned_panel(axes[0,1],radius,int_ratio, yerr=int_ratio_err)
         ax2.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax2.set_xlabel('Radius [arcmin]')
         ax2.set_title('Apertif int / NVSS int')
 
         #plot function pb level
-        ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio, reverse=True)
+        ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio,
+                                   reverse=True, yerr=peak_ratio_err)
         ax3.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax3.set_xlabel('Primary beam response level')
         #ax3.set_xlim(1.0,0.1)
 
-        ax4 = self.plot_oned_panel(axes[1,1],pb_level,int_ratio, reverse=True)
+        ax4 = self.plot_oned_panel(axes[1,1],pb_level,int_ratio,
+                                   reverse=True, yerr=int_ratio_err)
         ax4.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax4.set_xlabel('Primary beam response level')
         #ax4.set_xlim(1.0,0.1)
 
         #plot function ra offset
-        ax5 = self.plot_oned_panel(axes[2,0],delta_ra,peak_ratio)
+        ax5 = self.plot_oned_panel(axes[2,0],delta_ra,peak_ratio,
+                                   yerr = peak_ratio_err)
         ax5.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax5.set_xlabel('Delta RA [arcmin]')
 
-        ax6 = self.plot_oned_panel(axes[2,1],delta_ra,int_ratio)
+        ax6 = self.plot_oned_panel(axes[2,1],delta_ra,int_ratio,
+                                   yerr = int_ratio_err)
         ax6.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax6.set_xlabel('Delta RA [arcmin]')
 
         #plot function dec offset
-        ax7 = self.plot_oned_panel(axes[3,0],delta_dec,peak_ratio)
+        ax7 = self.plot_oned_panel(axes[3,0],delta_dec,peak_ratio,
+                                   yerr = peak_ratio_err)
         ax7.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax7.set_xlabel('Delta Dec [arcmin]')
 
-        ax8 = self.plot_oned_panel(axes[3,1],delta_dec,int_ratio)
+        ax8 = self.plot_oned_panel(axes[3,1],delta_dec,int_ratio,
+                                   yerr = int_ratio_err)
         ax8.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax8.set_xlabel('Delta Dec [arcmin]')
         
@@ -194,25 +238,28 @@ class PB(object):
         #close figure to be safe
         plt.close('all')
         
-    def plot_oned_panel(self,ax,x,y,reverse=False,xbin=None):
+    def plot_oned_panel(self,ax,x,y,yerr=None,
+                        reverse=False,xbin=None):
         """
         Helper function that takes x, y arrays for a
         fig/ax pair and does the plotting
         Since I'm doing a lot of repetitive plotting
         Optionally reverse axes; used for PB level
+        Optionally provide yerrorbars; then plot them
         """
         xs, ys_mean = running_mean(x,y,self.N)
-        ax.scatter(x,y,marker='.',c=mpcolors[0], s=5)
-        #ax.plot(xs,ys_mean,
-        #        label='Running mean over {} sources'.format(self.N),
-        #        color=mpcolors[1])
+        #lowest zorder to force points to background
+        ax.errorbar(x,y,yerr=yerr,c=mpcolors[0],fmt='.',
+                    linewidth=0.3,alpha=0.5, zorder=1)
+
         ax.plot([np.min(x),np.max(x)],[1,1],color='black')
         ax.plot([np.min(x),np.max(x)],[1.2,1.2],color='black',linestyle='--')
         ax.plot([np.min(x),np.max(x)],[0.8,0.8],color='black',linestyle='--')
         #add getting binned points and scatter
+        #have on top w/ highest zorder
         xb,xbr,yb,ybsc = bin_scatter(x,y,self.N,reverse=reverse,xbin=xbin)
-        ax.errorbar(xb,yb,xerr=xbr,yerr=ybsc,fmt='.',
-                    color=mpcolors[1])
+        ax.errorbar(xb,yb,xerr=xbr,yerr=ybsc,fmt='o',
+                    color=mpcolors[1],linewidth=3,zorder =5)
 
         if reverse:
             #only do this for pblevel, so can set explicitly
@@ -282,23 +329,54 @@ class PB(object):
             figname = ("pblevel_B{1}_{0}_{2}_{3}"
                        ".pdf").format(self.pbname,self.beam,
                                       self.startdate,self.enddate)
+            if 'int_flux_ap_err' in self.matches.colnames:
+                peak_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches_date_range['peak_flux_ap_err']/
+                                             self.matches_date_range['peak_flux_ap'])**2 +
+                                            (self.matches_date_range['int_flux_nvss_err']/
+                                             self.matches_date_range['int_flux_nvss'])**2 ) )
+                int_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches_date_range['int_flux_ap_err']/
+                                             self.matches_date_range['int_flux_ap'])**2 +
+                                            (self.matches_date_range['int_flux_nvss_err']/
+                                             self.matches_date_range['int_flux_nvss'])**2 ) )
+            else:
+                peak_ratio_err = None
+                int_ratio_err = None
         else:
             peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
             int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
             pb_level = self.matches['pb_level']
             figname = "pblevel_B{1}_{0}.pdf".format(self.pbname,self.beam)
+            if 'int_flux_ap_err' in self.matches.colnames:
+                peak_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches['peak_flux_ap_err']/
+                                             self.matches['peak_flux_ap'])**2 +
+                                            (self.matches['int_flux_nvss_err']/
+                                             self.matches['int_flux_nvss'])**2 ) )
+                int_ratio_err = ( peak_ratio *
+                                   np.sqrt( (self.matches['int_flux_ap_err']/
+                                             self.matches['int_flux_ap'])**2 +
+                                            (self.matches['int_flux_nvss_err']/
+                                             self.matches['int_flux_nvss'])**2 ) )
+            else:
+                peak_ratio_err = None
+                int_ratio_err = None
+                
         #setup figure; N source binning, plus equal pblevel binning, peak & int
         fig, axes = plt.subplots(2,2,figsize = (10,10),
                                  sharex = 'row',
                                  sharey = 'col')
 
         #plot N source binning
-        ax1 = self.plot_oned_panel(axes[0,0],pb_level,peak_ratio,reverse=True)
+        ax1 = self.plot_oned_panel(axes[0,0],pb_level,peak_ratio,
+                                   reverse=True, yerr= peak_ratio_err)
         ax1.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax1.set_xlabel('Primary beam response level')
         ax1.set_title('Apertif peak / NVSS int')
 
-        ax2 = self.plot_oned_panel(axes[0,1],pb_level,int_ratio,reverse=True)
+        ax2 = self.plot_oned_panel(axes[0,1],pb_level,int_ratio,
+                                   reverse=True, yerr= int_ratio_err)
         ax2.set_ylabel('Apertif total flux / NVSS integrated flux')
         ax2.set_xlabel('Primary beam response level')
         ax2.set_title('Apertif int / NVSS int')
@@ -306,12 +384,12 @@ class PB(object):
         #plot equal pb level binning
         
         ax3 = self.plot_oned_panel(axes[1,0],pb_level,peak_ratio,
-                                   xbin=xbins,reverse=True)
+                                   xbin=xbins,reverse=True, yerr=peak_ratio_err)
         ax3.set_ylabel('Apertif peak flux / NVSS integrated flux')
         ax3.set_xlabel('Primary beam response level')
 
         ax4 = self.plot_oned_panel(axes[1,1],pb_level,int_ratio,
-                                   xbin=xbins,reverse=True)
+                                   xbin=xbins,reverse=True, yerr=int_ratio_err)
         ax4.set_ylabel('Apertif int flux / NVSS integrated flux')
         ax4.set_xlabel('Primary beam response level')
 
@@ -320,6 +398,234 @@ class PB(object):
 
         plt.close('all')
 
+    def get_ratio_vals(self, mode='int', level = None):
+        """
+        Get mean, median, std and mean/median error
+        Do just for integrated flux ratio; can toggle for peak
+        Also for level; None is everything
+        """
+        peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+        int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+        pb_level = self.matches['pb_level']
+        peak_ratio_err = ( peak_ratio *
+                           np.sqrt( (self.matches['peak_flux_ap_err']/
+                                     self.matches['peak_flux_ap'])**2 +
+                                    (self.matches['int_flux_nvss_err']/
+                                     self.matches['int_flux_nvss'])**2 ) )
+        int_ratio_err = ( peak_ratio *
+                          np.sqrt( (self.matches['int_flux_ap_err']/
+                                    self.matches['int_flux_ap'])**2 +
+                                   (self.matches['int_flux_nvss_err']/
+                                    self.matches['int_flux_nvss'])**2 ) )
+        size = self.matches['maj_nvss']
+        #filter on size
+        #do stricter 45"; resolution convolved to
+        ind  = np.where(size <= 45.)[0]
+        peak_ratio = peak_ratio[ind]
+        int_ratio  = int_ratio[ind]
+        peak_ratio_err = peak_ratio_err[ind]
+        int_ratio_err = int_ratio_err[ind]
+        pb_level = pb_level[ind]
+        size = size[ind]
+        
+        #type of mode working in
+        if mode == 'peak':
+            ind = np.where(peak_ratio_err <= 0.1)[0]
+            ratio = peak_ratio[ind]
+            error = peak_ratio_err[ind]
+            pb_level = pb_level[ind]
+        else:
+            #ind = np.where(np.abs(int_ratio-1.1)<0.5)[0]
+            ind = np.where(int_ratio_err <= 0.1)[0]
+            ratio = int_ratio[ind]
+            error = int_ratio_err[ind]
+            pb_level = pb_level[ind]
+
+        #if pb level limits
+        if level is not None:
+            ind = np.where(pb_level >= level)[0]
+            ratio =ratio[ind]
+            error = error[ind]
+
+        #get stats
+        mean_ratio = np.mean(ratio)
+        median_ratio = np.median(ratio)
+        std_ratio = np.std(ratio)
+        mean_error =np.mean(error)
+        median_error = np.median(error)
+
+        return mean_ratio,median_ratio,std_ratio,mean_error,median_error
+
+    def plot_hist_peak(self,daterange=False):
+        """
+        Plot histograms of flux ratios
+        If daterange is set, do that as another histogram in same plot
+        Not turned on yet (lazy, not really using this feature)
+        Would be better to set date range globally and just update matches
+        Add more plots - peak to see about size bias
+        And filtering by NVSS size
+        Also limit bins to 0.5-1.5 to avoid outliers
+        Need to add helper function for histogram plots to clean code up
+        """
+        peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+        int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+        pb_level = self.matches['pb_level']
+        figname = "flux_ratio_hist_B{1}_{0}.pdf".format(self.pbname,self.beam)
+
+        fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2,figsize = (10,10))
+
+        #do integrated flux ratio
+        #do norm fitting
+        (mu, sigma) = norm.fit(int_ratio)
+        #normalize histogram for fitting
+        n, bins, patches = ax1.hist(int_ratio,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax1.set_xlabel('Apertif int flux / NVSS int flux')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax1.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(int_ratio[ind_main])
+        n, bins, patches =ax1.hist(int_ratio[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax1.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+
+        ax1.set_ylim(0,4.5)
+        ax1.set_xlim(0.2,2.5)
+        
+        ax1.legend()
+
+        #do peak flux ratio
+        #do norm fitting
+        (mu, sigma) = norm.fit(peak_ratio)
+        #normalize histogram for fitting
+        n, bins, patches = ax2.hist(peak_ratio,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax2.set_xlabel('Apertif peak flux / NVSS int flux')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax2.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(peak_ratio[ind_main])
+        n, bins, patches =ax2.hist(peak_ratio[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax2.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+
+        ax2.set_ylim(0,4.5)
+        ax2.set_xlim(0.2,2.5)
+        
+        ax2.legend()
+
+
+        #do integrated flux ratio w/ limited size
+        ind40 = np.where(self.matches['maj_nvss'] <= 40.)[0]
+        int_ratio_40 = int_ratio[ind40]
+        pb_level_40 = pb_level[ind40]
+        (mu, sigma) = norm.fit(int_ratio_40)
+        n, bins, patches = ax3.hist(int_ratio_40,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax3.set_xlabel('Apertif int flux / NVSS int flux')
+        ax3.set_title('NVSS major axis <= 40"')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax3.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level_40 >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(int_ratio_40[ind_main])
+        n, bins, patches =ax3.hist(int_ratio_40[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax3.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+        ax3.set_ylim(0,4.5)
+        ax3.set_xlim(0.2,2.5)
+        ax3.legend()
+
+        #do peak flux ratio w/ limited size
+        ind40 = np.where(self.matches['maj_nvss'] <= 40.)[0]
+        peak_ratio_40 = peak_ratio[ind40]
+        pb_level_40 = pb_level[ind40]
+        (mu, sigma) = norm.fit(peak_ratio_40)
+        n, bins, patches = ax4.hist(peak_ratio_40,
+                                    label='All PB levels',
+                                    density=True,
+                                    bins = np.arange(0.5,1.55,0.05),
+                                    alpha=0.9,
+                                    histtype='step')
+        ax4.set_xlabel('Apertif peak flux / NVSS int flux')
+        ax4.set_title('NVSS major axis <= 40"')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu, sigma)
+        ax4.plot(bins, y, linestyle='--',
+                 label='Gaussian mean={0:4.2f}, sigma={1:4.2f}'.format(mu,sigma))
+        
+        #get only where PB level is >= 0.5
+        ind_main = np.where(pb_level_40 >= 0.5)[0]
+        (mu_50, sigma_50) = norm.fit(peak_ratio_40[ind_main])
+        n, bins, patches =ax4.hist(peak_ratio_40[ind_main],
+                                   label='PB level >= 0.5',
+                                   density=True,
+                                   bins = np.arange(0.5,1.55,0.05),
+                                   alpha=0.9,
+                                   histtype='step')
+        # add a 'best fit' line
+        y = mlab.normpdf( bins, mu_50, sigma_50)
+        ax4.plot(bins, y, linestyle='--',
+                 label=('PB>50%; Gaussian mean={0:4.2f}, '
+                        'sigma={1:4.2f}').format(mu_50,sigma_50))
+        ax4.set_ylim(0,4.5)
+        ax4.set_xlim(0.2,2.5)
+        ax4.legend()
+
+        
+
+        figpath = os.path.join(figdir,figname)
+        plt.savefig(figpath)
+
+        plt.close('all')
+    
     def get_scatter_pblev(self,lev,daterange=False,
                           xbins=np.arange(0.15,1.1,0.1),
                           mode='int'):
