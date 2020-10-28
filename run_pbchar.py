@@ -61,6 +61,12 @@ if __name__ == '__main__':
     #two tables; one all vals, one 50%
     t = Table(data = np.zeros(N,dtype=dtype))
     t50 = Table(data = np.zeros(N,dtype=dtype))
+
+    #get a table with values for 2-D position plot
+    dtype_pos = [('beam','i4'),('delta_ra','f8'),
+                 ('delta_ra_cb','f8'), ('delta_dec','f8'),
+                 ('delta_dec_cb','f8'), ('int_flux_ratio','f8')]
+    t_pos = Table(data=np.zeros(N,dtype=dtype_pos))
     
     #run in serial per beam
     #weird issues with matplotlib / backend
@@ -97,17 +103,17 @@ if __name__ == '__main__':
     #make some plots
     fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,5))
     #plot ratio values
-    ax1.scatter(t['beam'],t['mean_flux_ratio'],
-                label='Mean flux ratio: {:4.2f}'.format(np.mean(
-                    t['mean_flux_ratio'])))
+    #ax1.scatter(t['beam'],t['mean_flux_ratio'],
+    #            label='Mean flux ratio: {:4.2f}'.format(np.median(
+    #                t['mean_flux_ratio'])))
     ax1.scatter(t['beam'],t['median_flux_ratio'],
-                label='Median flux ratio: {:4.2f}'.format(np.mean(
+                label='Median flux ratio: {:4.2f}'.format(np.median(
                     t['median_flux_ratio'])))
-    ax1.scatter(t50['beam'],t50['mean_flux_ratio'],
-                label='Mean flux ratio >=50% : {:4.2f}'.format(np.mean(
-                    t50['mean_flux_ratio'])))
+    #ax1.scatter(t50['beam'],t50['mean_flux_ratio'],
+    #            label='Mean flux ratio >=50% : {:4.2f}'.format(np.median(
+    #                t50['mean_flux_ratio'])))
     ax1.scatter(t50['beam'],t50['median_flux_ratio'],
-                label='Median flux ratio >=50% : {:4.2f}'.format(np.mean(
+                label='Median flux ratio >=50% : {:4.2f}'.format(np.median(
                     t50['median_flux_ratio'])))
     ax1.set_xlabel('Beam')
     ax1.set_ylabel('Integrated flux ratio Apertif / NVSS')
@@ -115,22 +121,22 @@ if __name__ == '__main__':
 
     #plot error/scatter values
     ax2.scatter(t['beam'],t['std_flux_ratio'],
-                label='Scatter flux ratio : {:4.2f}'.format(np.mean(
+                label='Scatter flux ratio : {:4.2f}'.format(np.median(
                     t['std_flux_ratio'])))
-    ax2.scatter(t['beam'],t['mean_error'],
-                label='Mean error flux ratio : {:4.2f}'.format(np.mean(
-                    t['mean_error'])))
+    #ax2.scatter(t['beam'],t['mean_error'],
+    #            label='Mean error flux ratio : {:4.2f}'.format(np.median(
+    #                t['mean_error'])))
     ax2.scatter(t['beam'],t['median_error'],
-                label='Median error flux ratio : {:4.2f}'.format(np.mean(
+                label='Median error flux ratio : {:4.2f}'.format(np.median(
                     t['median_error'])))
     ax2.scatter(t50['beam'],t50['std_flux_ratio'],
-                label='Scatter flux ratio >=50% : {:4.2f}'.format(np.mean(
+                label='Scatter flux ratio >=50% : {:4.2f}'.format(np.median(
                     t50['std_flux_ratio'])))
-    ax2.scatter(t50['beam'],t50['mean_error'],
-                label='Mean error flux ratio >=50% : {:4.2f}'.format(np.mean(
-                    t50['mean_error'])))
+    #ax2.scatter(t50['beam'],t50['mean_error'],
+    #            label='Mean error flux ratio >=50% : {:4.2f}'.format(np.median(
+    #                t50['mean_error'])))
     ax2.scatter(t50['beam'],t50['median_error'],
-                label='Median error flux ratio >=50% : {:4.2f}'.format(np.mean(
+                label='Median error flux ratio >=50% : {:4.2f}'.format(np.median(
                     t50['median_error'])))
     
     ax2.set_xlabel('Beam')

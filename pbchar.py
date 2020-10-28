@@ -465,6 +465,7 @@ class PB(object):
         Add more plots - peak to see about size bias
         And filtering by NVSS size
         Also limit bins to 0.5-1.5 to avoid outliers
+        Need to add helper function for histogram plots to clean code up
         """
         peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
         int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
