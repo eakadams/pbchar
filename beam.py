@@ -536,9 +536,8 @@ class Beam(object):
         #dont' do source finding if output already exists
         if not os.path.exists(self.bdsf_output) and not self.skipcheck:
             try:
-                bdsf.process_image(self.pbsmfits,adaptive_rms_box=True,
-                                   thresh_isl=3.0,
-                                   thresh_pix=5.0). write_catalog(
+                #use all defaults ot match what ALexander does
+                bdsf.process_image(self.pbsmfits).write_catalog(
                                        outfile=self.bdsf_output,
                                        format='ascii',
                                        clobber=True)
@@ -565,8 +564,8 @@ class Beam(object):
         #get sky coord of cont image
         v = Vizier(columns = ['NVSS','RAJ2000','DEJ2000','S1.4','e_S1.4',
                               'MajAxis','MinAxis'],
-                   row_limit = -1,
-                   column_filters = {"MajAxis":"<50", "MinAxis":"<50"})
+                   row_limit = -1)#,
+                   #column_filters = {"MajAxis":"<50", "MinAxis":"<50"})
         print(self.ra.to(u.deg),self.dec.to(u.deg))
         result = v.query_region(SkyCoord(self.ra.to(u.deg),
                                          self.dec.to(u.deg),
@@ -600,6 +599,8 @@ class Beam(object):
             peak_flux_ap = [] #apertif
             int_flux_ap = []
             int_flux_nvss = []
+            ra = [] #apertif ra
+            dec = [] #apertif dec
             deltara = [] #delta RA (Apertif) from image center
             deltadec = [] #delta dec (Apertif) from image center
             radius = [] #distance from field center
@@ -649,6 +650,8 @@ class Beam(object):
                 #check if separation is w/in 5"
                 if sep2d  < 5*u.arcsec:
                     #append values to list
+                    ra.append(bdsf_sources['RA'][i])
+                    dec.append(bdsf_sources['DEC'][i])
                     peak_flux_ap.append(bdsf_sources['Peak_flux'][i])
                     int_flux_ap.append(bdsf_sources['Total_flux'][i])
                     int_flux_nvss.append((self.nvss_table['S1.4'][idx])/1000.) #record in  Jy, match bdsf
