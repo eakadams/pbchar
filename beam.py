@@ -680,12 +680,13 @@ class Beam(object):
             #add obsid also
             tid = np.full(len(peak_flux_ap),self.taskid)
                     
-            self.match_table = Table([tid,peak_flux_ap, peak_flux_ap_err,
+            self.match_table = Table([tid,ra,dec,peak_flux_ap, peak_flux_ap_err,
                                       int_flux_ap, int_flux_ap_err,
                                       int_flux_nvss, int_flux_nvss_err,
                                       ap_maj,ap_min,nvss_maj,nvss_min,
                                       deltara,deltadec,radius,pb_level],
-                                     names=('ObsID','peak_flux_ap','peak_flux_ap_err',
+                                     names=('ObsID','RA','Dec',
+                                            'peak_flux_ap','peak_flux_ap_err',
                                             'int_flux_ap','int_flux_ap_err',
                                             'int_flux_nvss', 'int_flux_nvss_err',
                                             'maj_ap','min_ap','maj_nvss','min_nvss',
