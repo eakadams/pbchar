@@ -345,6 +345,8 @@ class Beam(object):
             pbfits = os.path.join(self.pbdir,"{0}_nonorm.fits".format(self.beam))
         if self.pbname == 'gp_avg_norm':
             pbfits = os.path.join(self.pbdir,"{0}_gp_avg_norm.fits".format(self.beam))
+        if self.pbname == 'gp_avg_orig':
+            pbfits = os.path.join(self.pbdir,"{0}_gp_avg_orig.fits".format(self.beam))
 
         #having defined pbfits above,
         #check it exists, retrieve to miriad in workingdir
