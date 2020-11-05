@@ -34,6 +34,18 @@ parser.add_argument("--enddate",help="End date for plotting; YYMMDD",
 parser.add_argument("--path",help=("Path to cross-matchfiles; "
                                    "default 'pbchar/files'"),
                     default=filedir)
+parser.add_argument("--SN",default=None,type=float,
+                    help="Min SN for filtering sources")
+parser.add_argument("--mode",default="int",
+                    help="'peak' or 'int', type of flux ratio")
+parser.add_argument("--raterr",default=None,type=float,
+                    help="Max error on flux ratio for filtering sources")
+parser.add_argument("--size",default=None,type=float,
+                     help="Max NVSS size for filtering sources")
+parser.add_argument("--plots",default=True,type=bool,
+                    help="Produce plots or not")
+parser.add_argument("--output",default=None,
+                    help="Additional string to add to output files")
 args = parser.parse_args()
 
 
@@ -45,7 +57,9 @@ def beam_char(bm):
         args.matchfilebase,bm))
     
     CB = pbchar.PB(matchfile,startdate=args.startdate,
-                   enddate=args.enddate)
+                   enddate=args.enddate, SN=args.SN,
+                   size = args.size, raterr=args.raterr,
+                   mode = args.mode)
     CB.go()
 
 
@@ -77,9 +91,12 @@ if __name__ == '__main__':
             args.matchfilebase,bm))
         #load PB object
         CB = pbchar.PB(matchfile,startdate=args.startdate,
-                       enddate=args.enddate)
+                       enddate=args.enddate, SN=args.SN,
+                       size = args.size, raterr=args.raterr,
+                       mode = args.mod)
         #get plots
-        #CB.go()
+        if args.plot:
+            CB.go()
         #get scatter values for table
         (mean_ratio,median_ratio,std_ratio,
          mean_error,median_error) = CB.get_ratio_vals()
@@ -92,10 +109,32 @@ if __name__ == '__main__':
         t50[bm] = (bm,mean_ratio_50, median_ratio_50,
                    std_ratio_50, mean_error_50, median_error_50)
 
-    #write table out
-    tablename = "ratio_values_{}.csv".format(args.matchfilebase)
+    #get a limited table for docs and write that out
+    t_docs = t['beam','median_flux_ratio','std_flux_ratio','median_error']
+    t50_docs = t['beam','median_flux_ratio','std_flux_ratio','median_error']
+    tablename = "ratio_values_doc_{}.csv".format(args.matchfilebase)
     tablepath = os.path.join(args.path,tablename)
-    tablename50 = "ratio_values_50_{}.csv".format(args.matchfilebase)
+    t_docs.write(tablepath,format='csv',overwrite=True,
+                 formats = {'median_flux_ratio': '4.2f',
+                            'std_flux_ratio': '4.2f',
+                            'median_error':'4.2f'})
+    tablename = "ratio_values_50_doc_{}.csv".format(args.matchfilebase)
+    tablepath = os.path.join(args.path,tablename)
+    t50_docs.write(tablepath,format='csv',overwrite=True,
+                 formats = {'median_flux_ratio': '4.2f',
+                            'std_flux_ratio': '4.2f',
+                            'median_error':'4.2f'})
+
+    #write table out
+    if args.output is None:
+        tablename = "ratio_values_{}.csv".format(args.matchfilebase)
+        tablename50 = "ratio_values_50_{}.csv".format(args.matchfilebase)
+    else:
+        tablename = "ratio_values_{0}_{1}.csv".format(args.matchfilebase,
+                                                      args.output)
+        tablename50 = "ratio_values_50_{0}_{1}.csv".format(args.matchfilebase,
+                                                           args.output)
+    tablepath = os.path.join(args.path,tablename)
     tablepath50 = os.path.join(args.path,tablename)
     t.write(tablepath, format='csv',overwrite=True)
     t50.write(tablepath50, format='csv',overwrite=True)
@@ -103,15 +142,15 @@ if __name__ == '__main__':
     #make some plots
     fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,5))
     #plot ratio values
-    #ax1.scatter(t['beam'],t['mean_flux_ratio'],
-    #            label='Mean flux ratio: {:4.2f}'.format(np.median(
-    #                t['mean_flux_ratio'])))
+    ax1.scatter(t['beam'],t['mean_flux_ratio'],
+                label='Mean flux ratio: {:4.2f}'.format(np.median(
+                    t['mean_flux_ratio'])))
     ax1.scatter(t['beam'],t['median_flux_ratio'],
                 label='Median flux ratio: {:4.2f}'.format(np.median(
                     t['median_flux_ratio'])))
-    #ax1.scatter(t50['beam'],t50['mean_flux_ratio'],
-    #            label='Mean flux ratio >=50% : {:4.2f}'.format(np.median(
-    #                t50['mean_flux_ratio'])))
+    ax1.scatter(t50['beam'],t50['mean_flux_ratio'],
+                label='Mean flux ratio >=50% : {:4.2f}'.format(np.median(
+                    t50['mean_flux_ratio'])))
     ax1.scatter(t50['beam'],t50['median_flux_ratio'],
                 label='Median flux ratio >=50% : {:4.2f}'.format(np.median(
                     t50['median_flux_ratio'])))
@@ -144,7 +183,11 @@ if __name__ == '__main__':
     ax2.legend()
 
     #save figure!
-    figpath = os.path.join(figdir,"ratio_vals.pdf")
+    if args.output is None:
+        figpath = os.path.join(figdir,"ratio_vals_{}.pdf".format(args.matchfilebase))
+    else:
+        figpath = os.path.join(figdir,"ratio_vals_{0}_{1}.pdf".format(args.matchfilebase,
+                                                                      args.output))
     plt.savefig(figpath)
     plt.close('all')
     

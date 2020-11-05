@@ -38,7 +38,11 @@ class PB(object):
                  matchfile,
                  startdate = None,
                  enddate = None,
-                 N=20):
+                 N=20,
+                 SN = None,
+                 raterr = None,
+                 size = None,
+                 mode = "int"):
         """
         Initialize PB object
         Inputs:
@@ -46,6 +50,9 @@ class PB(object):
         - startdate (str): YYMMDD, start date to make time-limited set of plots
         - enddate (str): YYMMDD, end date to make time-limited set of plots
         - N (int): number of sources to average over for binnning / running mean 
+        - SN (float): optional filter on SN of measured APertif sources
+        - raterr (float): optional filter on error in flux ratio
+        - size (float): optional filter on NVSS size
         """
         #read in match file
         self.matches = ascii.read(matchfile,format='csv')
@@ -142,15 +149,17 @@ class PB(object):
             #assume one exists if they all do (how I wrote code)
             if 'int_flux_ap_err' in self.matches.colnames:
                 peak_ratio_err = ( peak_ratio *
-                                   np.sqrt( (self.matches_date_range['peak_flux_ap_err']/
-                                             self.matches_date_range['peak_flux_ap'])**2 +
-                                            (self.matches_date_range['int_flux_nvss_err']/
-                                             self.matches_date_range['int_flux_nvss'])**2 ) )
+                                   np.sqrt(
+                                       (self.matches_date_range['peak_flux_ap_err']/
+                                        self.matches_date_range['peak_flux_ap'])**2 +
+                                       (self.matches_date_range['int_flux_nvss_err']/
+                                        self.matches_date_range['int_flux_nvss'])**2 ) )
                 int_ratio_err = ( peak_ratio *
-                                   np.sqrt( (self.matches_date_range['int_flux_ap_err']/
-                                             self.matches_date_range['int_flux_ap'])**2 +
-                                            (self.matches_date_range['int_flux_nvss_err']/
-                                             self.matches_date_range['int_flux_nvss'])**2 ) )
+                                   np.sqrt(
+                                       (self.matches_date_range['int_flux_ap_err']/
+                                        self.matches_date_range['int_flux_ap'])**2 +
+                                       (self.matches_date_range['int_flux_nvss_err']/
+                                        self.matches_date_range['int_flux_nvss'])**2 ) )
             else:
                 peak_ratio_err = None
                 int_ratio_err = None
@@ -404,42 +413,52 @@ class PB(object):
         Do just for integrated flux ratio; can toggle for peak
         Also for level; None is everything
         """
-        peak_ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
-        int_ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
-        pb_level = self.matches['pb_level']
-        peak_ratio_err = ( peak_ratio *
+        #get mode working in first
+        #then can filter just for that mode
+        if self.mode == 'peak':
+            ratio = self.matches['peak_flux_ap']/self.matches['int_flux_nvss']
+            SN = self.matches['peak_flux_ap']/self.matches['peak_flux_ap_err']
+            error = ( ratio *
                            np.sqrt( (self.matches['peak_flux_ap_err']/
                                      self.matches['peak_flux_ap'])**2 +
                                     (self.matches['int_flux_nvss_err']/
                                      self.matches['int_flux_nvss'])**2 ) )
-        int_ratio_err = ( peak_ratio *
+        else:
+            ratio = self.matches['int_flux_ap']/self.matches['int_flux_nvss']
+            SN = self.matches['int_flux_ap']/self.matches['int_flux_ap_err']
+            error = ( ratio *
                           np.sqrt( (self.matches['int_flux_ap_err']/
                                     self.matches['int_flux_ap'])**2 +
                                    (self.matches['int_flux_nvss_err']/
                                     self.matches['int_flux_nvss'])**2 ) )
+        #independent of mode                                         
+        pb_level = self.matches['pb_level']
         size = self.matches['maj_nvss']
-        #filter on size
-        #do stricter 45"; resolution convolved to
-        ind  = np.where(size <= 45.)[0]
-        peak_ratio = peak_ratio[ind]
-        int_ratio  = int_ratio[ind]
-        peak_ratio_err = peak_ratio_err[ind]
-        int_ratio_err = int_ratio_err[ind]
-        pb_level = pb_level[ind]
-        size = size[ind]
         
-        #type of mode working in
-        if mode == 'peak':
-            ind = np.where(peak_ratio_err <= 0.1)[0]
-            ratio = peak_ratio[ind]
-            error = peak_ratio_err[ind]
+        #filter on size, if set
+        if self.size is not None:
+            ind  = np.where(size <= self.size)[0]
+            ratio = ratio[ind]
+            SN = SN[ind]
+            error = error[ind]
             pb_level = pb_level[ind]
-        else:
-            #ind = np.where(np.abs(int_ratio-1.1)<0.5)[0]
-            ind = np.where(int_ratio_err <= 0.1)[0]
-            ratio = int_ratio[ind]
-            error = int_ratio_err[ind]
+            size = size[ind]
+        #filter on SN, if set
+        if self.SN is not None:
+            ind = np.where( SN >= self.SN)[0]
+            ratio = ratio[ind]
+            SN = SN[ind]
+            error = error[ind]
             pb_level = pb_level[ind]
+            size = size[ind]
+        #filter on ratio error, if set
+        if self.raterr is not None:
+            ind = np.where(error <= self.raterr)[0]
+            ratio = ratio[ind]
+            SN = SN[ind]
+            error = error[ind]
+            pb_level = pb_level[ind]
+            size = size[ind]
 
         #if pb level limits
         if level is not None:
