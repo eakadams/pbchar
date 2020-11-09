@@ -333,7 +333,9 @@ class Beam(object):
         #check if drift
         if len(self.pbname) == 6:
             #YYMMDD name used for driftscans
-            pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
+            #pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model_reg.fits".
+            #                      format(self.pbname,self.beam))
+            pbfits = os.path.join(self.pbdir,"{0}_{1}_I_model.fits".
                                   format(self.pbname,self.beam))
             #may have to add a check about string length, but wait until it's a problem
         #check if gpall
