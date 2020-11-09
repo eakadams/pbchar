@@ -42,7 +42,7 @@ parser.add_argument("--raterr",default=None,type=float,
                     help="Max error on flux ratio for filtering sources")
 parser.add_argument("--size",default=None,type=float,
                      help="Max NVSS size for filtering sources")
-parser.add_argument("--plots",default=True,type=bool,
+parser.add_argument("--plots",default=False,type=bool,
                     help="Produce plots or not")
 parser.add_argument("--output",default=None,
                     help="Additional string to add to output files")
@@ -93,9 +93,10 @@ if __name__ == '__main__':
         CB = pbchar.PB(matchfile,startdate=args.startdate,
                        enddate=args.enddate, SN=args.SN,
                        size = args.size, raterr=args.raterr,
-                       mode = args.mod)
+                       mode = args.mode)
         #get plots
-        if args.plot:
+        #print(args.plots,type(args.plots))
+        if args.plots:
             CB.go()
         #get scatter values for table
         (mean_ratio,median_ratio,std_ratio,
@@ -111,19 +112,19 @@ if __name__ == '__main__':
 
     #get a limited table for docs and write that out
     t_docs = t['beam','median_flux_ratio','std_flux_ratio','median_error']
-    t50_docs = t['beam','median_flux_ratio','std_flux_ratio','median_error']
+    t50_docs = t50['beam','median_flux_ratio','std_flux_ratio','median_error']
     tablename = "ratio_values_doc_{}.csv".format(args.matchfilebase)
     tablepath = os.path.join(args.path,tablename)
     t_docs.write(tablepath,format='csv',overwrite=True,
                  formats = {'median_flux_ratio': '4.2f',
                             'std_flux_ratio': '4.2f',
                             'median_error':'4.2f'})
-    tablename = "ratio_values_50_doc_{}.csv".format(args.matchfilebase)
-    tablepath = os.path.join(args.path,tablename)
-    t50_docs.write(tablepath,format='csv',overwrite=True,
-                 formats = {'median_flux_ratio': '4.2f',
-                            'std_flux_ratio': '4.2f',
-                            'median_error':'4.2f'})
+    tablename50 = "ratio_values_50_doc_{}.csv".format(args.matchfilebase)
+    tablepath50 = os.path.join(args.path,tablename50)
+    t50_docs.write(tablepath50,format='csv',overwrite=True,
+                   formats = {'median_flux_ratio': '4.2f',
+                              'std_flux_ratio': '4.2f',
+                              'median_error':'4.2f'})
 
     #write table out
     if args.output is None:

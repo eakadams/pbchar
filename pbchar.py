@@ -71,6 +71,11 @@ class PB(object):
 
         #add number of sources to use for running mean / binning
         self.N = N
+        #add filters/other options
+        self.SN = SN
+        self.raterr = raterr
+        self.size = size
+        self.mode = mode
 
         #get a limited set of matches if date ranges are set
         #initialize attribute
