@@ -50,6 +50,8 @@ if pbname == '190912':
     pbdir = '/tank/apertif/driftscans/DR1/190912/continuum'
 elif pbname == '191002':
     pbdir='/tank/denes/drift_scan/191002/cont'
+elif pbname == '201028':
+    pbdir = '/tank/apertif/driftscans/fits_files/201028/beam_models/chann_7'
 elif pbname == 'gpall':
     pbdir = '/data/kutkin/cbeams'
 elif pbname == '200130':
