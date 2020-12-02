@@ -26,4 +26,5 @@ On the do-do list:
 - Make specification of drift scan to run_beams more robust (look for normal stored files, not resized)
 - Compare peak to total fluxes (more for understanding flux issues)
 - Do intra-Apertif comparisons using MDS fields
+- Add a Bayesian / MCMC analysis to get intrinsic scatter in flux scale
 - Rewrite beam.Beam to use astropy/python exclusively, as opposed to miriad (mainly because of BPA=0 header issues, also will hopefully be more efficient)
