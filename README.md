@@ -8,6 +8,11 @@ Runs on happili-05; only drift scans 190912 and 191002 currently implemented
 To collect cross-matched, PB-corrected source information:
 `python combine_beams.py /tank/adams/pbchar/191002`
 
+To make plots: <br>
+`python run_pbchar.py filebase` <br>
+To see options for running, including filtering on matches, turning on plots, etc: <br>
+`python run_pbchar.py` -h
+
 To make first, simple plots (in a python interpreter):
 
 ```
@@ -18,6 +23,7 @@ B00.go()
 
 
 On the do-do list:
-- Write a wrapper function for PB characterization to run all compound beams for a given set of PB images
-- Make sure run_beams (and beam.Beam) can handle PB images from Gaussian Process method in addition to drift scans
+- Make specification of drift scan to run_beams more robust (look for normal stored files, not resized)
+- Compare peak to total fluxes (more for understanding flux issues)
+- Do intra-Apertif comparisons using MDS fields
 - Rewrite beam.Beam to use astropy/python exclusively, as opposed to miriad (mainly because of BPA=0 header issues, also will hopefully be more efficient)
