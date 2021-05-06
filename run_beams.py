@@ -84,10 +84,12 @@ def run_beam(packed_args):
     #unpack  args
     bm,tid = packed_args
     #print("Initializing beam {0} for taskid {1}".format(bm,tid))
+    #skip check here; done with mapping instead
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
                   masklevel=0.1,
                   outputdir = args.outputdir,
-                  workingdir = args.workingdir)
+                  workingdir = args.workingdir,
+                  skipcheck=True)
     try:
         B.go()
     except Exception as e:
