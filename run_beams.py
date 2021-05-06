@@ -88,8 +88,7 @@ def run_beam(packed_args):
     B = beam.Beam(tid,bm,pbname=pbname,pbdir=pbdir,
                   masklevel=0.1,
                   outputdir = args.outputdir,
-                  workingdir = args.workingdir,
-                  skipcheck=True)
+                  workingdir = args.workingdir)
     try:
         B.go()
     except Exception as e:
