@@ -619,6 +619,9 @@ class Beam(object):
             ap_min = []
             int_flux_ap_err = []
             peak_flux_ap_err = []
+            ra_nvss = []
+            dec_nvss = []
+
 
             #get NVSS skycoord object
             #print(self.nvss_table['RAJ2000','DEJ2000'][0:10])
@@ -680,6 +683,9 @@ class Beam(object):
                     ap_min.append(bdsf_sources['Min'][i]*3600.) #arcsec
                     int_flux_ap_err.append(bdsf_sources['E_Total_flux'][i])
                     peak_flux_ap_err.append(bdsf_sources['E_Peak_flux'][i])
+                    ra_nvss.append(nvss_coords.ra.deg[idx])
+                    dec_nvss.append(nvss_coords.dec.deg[idx])
+
                     
             #add obsid also
             tid = np.full(len(peak_flux_ap),self.taskid)
@@ -688,14 +694,17 @@ class Beam(object):
                                       int_flux_ap, int_flux_ap_err,
                                       int_flux_nvss, int_flux_nvss_err,
                                       ap_maj,ap_min,nvss_maj,nvss_min,
-                                      deltara,deltadec,radius,pb_level],
+                                      deltara,deltadec,radius,pb_level,
+                                      ra,dec,ra_nvss,dec_nvss],
                                      names=('ObsID','RA','Dec',
                                             'peak_flux_ap','peak_flux_ap_err',
                                             'int_flux_ap','int_flux_ap_err',
                                             'int_flux_nvss', 'int_flux_nvss_err',
                                             'maj_ap','min_ap','maj_nvss','min_nvss',
-                                            'delta_ra',
-                                            'delta_dec','radius','pb_level'))
+                                            'delta_ra_beam',
+                                            'delta_dec_beam','radius','pb_level',
+                                            'ra_apertif','dec_apertif',
+                                            'ra_nvss','dec_nvss'))
         else:
             print("No bdsf output so skip cross-matching")
 
