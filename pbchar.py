@@ -20,6 +20,7 @@ import os
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 import matplotlib.mlab as mlab
+from astropy.coordinates import SkyCoord
 
 
 #define global directories
@@ -107,7 +108,6 @@ class PB(object):
         else:
             self.matches_date_range = limit_matches
 
-
     def go(self):
         """
         Run all available analysis plots:
@@ -126,6 +126,81 @@ class PB(object):
         if self.matches_date_range is not None:
             self.position_plots(daterange=True)
             self.oned_plots(daterange=True)
+
+    def get_astrometry(self):
+        """Gets astrometry for a PB object
+
+        Parameters
+        ----------
+        self : PB object
+        
+        Returns
+        -------
+        offset_ra : Numpy array of Angles (astropy.coordinates.angles.Angle)
+            The offset in RA to go from Apertif to NVSS coord for all matches
+        offset_dec : Numpy array of Angle
+            The offset in Dec to go from Apertif to NVSS coord for all matches
+        median_ra_offset : Angle
+            The median RA offset over all observations included in PB object
+        median_dec_offset : Angle
+            The median Dec offset over all observations in PB object
+        obsid : numpy array
+            All Observation IDs in PB object
+        med_ra_offset_obsid : Numpy array of Angles
+            Median RA offset for each ObsID in obsid 
+        med_dec_offset_obsid : Numpy array of Angles
+            Median Dec offset for each ObsID in obsid 
+        """
+
+        #Load RA,Dec into skycoord objects
+        coords_nvss = SkyCoord(self.matches['ra_nvss'],self.matches['dec_nvss'],
+                               unit='deg')
+        coords_apertif  = SkyCoord(self.matches['ra_apertif'],
+                                   self.matches['dec_apertif'], unit='deg')
+
+        #get spherical coord offsets to go from Apertif to NVSS
+        offset_ra, offset_dec = coords_apertif.spherical_offsets_to(coords_nvss)
+
+        #calculate median ra, dec offset
+        median_ra_offset = np.median(offset_ra)
+        median_dec_offset = np.median(offset_dec)
+        
+        print(("To go from Apertif to NVSS, "
+               "the median offset in RA is {0:4.2f} arcsec. "
+               "The median offset in Dec is {1:4.2f} arcsec").format(median_ra_offset.arcsec,
+                                                                     median_dec_offset.arcsec))
+
+        #also do things based on ObsID
+        obsid = np.unique(self.matches['ObsID'])
+        med_ra_offset_obsid = np.empty(len(obsid),dtype=object)
+        med_dec_offset_obsid = np.empty(len(obsid),dtype=object)
+        for i,obs in enumerate(obsid):
+            source_ind = np.where(self.matches['ObsID'] == obs)[0]
+            offset_ra_obsid = offset_ra[source_ind]
+            offset_dec_obsid = offset_dec[source_ind]
+            med_ra_offset_obsid[i] = np.median(offset_ra_obsid)
+            med_dec_offset_obsid[i] = np.median(offset_dec_obsid)
+        
+
+        return (offset_ra, offset_dec, median_ra_offset, median_dec_offset,
+                obsid, med_ra_offset_obsid, med_dec_offset_obsid)
+    
+
+    def plot_astrometry(self):
+        """Makes plot of astrometry
+
+        Parameters
+        ----------
+        self : PB object
+
+        Returns
+        -------
+        fig2d : plt figure instance of 2D astrometry plot
+        ax2d : ax instance of 2D astrometry plot
+        fig_obsid : plt figure instance of obsid behavior
+        ax_obsid : ax instance of obsid behavior
+        """
+            
 
     def oned_plots(self,daterange=False):
         """
