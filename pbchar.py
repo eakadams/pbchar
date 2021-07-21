@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 import matplotlib.mlab as mlab
 from astropy.coordinates import SkyCoord
+from astropy import units as u
 
 
 #define global directories
@@ -140,10 +141,14 @@ class PB(object):
             The offset in RA to go from Apertif to NVSS coord for all matches
         offset_dec : Numpy array of Angle
             The offset in Dec to go from Apertif to NVSS coord for all matches
-        median_ra_offset : Angle
-            The median RA offset over all observations included in PB object
-        median_dec_offset : Angle
-            The median Dec offset over all observations in PB object
+        median_ra_offset : float
+            The median RA offset in arcsec over all observations included in PB object
+        median_dec_offset : float
+            The median Dec offset in arcsec over all observations in PB object
+        rms_ra_offset : float
+            RMS of RA offset
+        rms_dec_offset : float
+            RMS of Dec offset
         obsid : numpy array
             All Observation IDs in PB object
         med_ra_offset_obsid : Numpy array of Angles
@@ -162,13 +167,32 @@ class PB(object):
         offset_ra, offset_dec = coords_apertif.spherical_offsets_to(coords_nvss)
 
         #calculate median ra, dec offset
-        median_ra_offset = np.median(offset_ra)
-        median_dec_offset = np.median(offset_dec)
+        #put in arcsec
+        median_ra_offset = np.median(offset_ra).arcsec
+        median_dec_offset = np.median(offset_dec).arcsec
+
+        #also get std and report that
+        rms_ra_offset = np.sqrt(np.mean(offset_ra.arcsec**2))
+        rms_dec_offset = np.sqrt(np.mean(offset_dec.arcsec**2))
+
+        #also look at total offset
+        separation = coords_apertif.separation(coords_nvss)
+        median_sep = np.median(separation.arcsec)
+        rms_sep = np.sqrt(np.mean(separation.arcsec**2))
+        #rms_offset = np.sqrt(np.mean(offset
         
         print(("To go from Apertif to NVSS, "
-               "the median offset in RA is {0:4.2f} arcsec. "
-               "The median offset in Dec is {1:4.2f} arcsec").format(median_ra_offset.arcsec,
-                                                                     median_dec_offset.arcsec))
+               "the median offset in RA is {0:4.2f} "
+               "({2:4.2f}) arcsec. "
+               "The median offset in Dec is {1:4.2f} "
+               "({3:4.2f}) arcsec ").format(median_ra_offset,
+                                            median_dec_offset,
+                                            rms_ra_offset,
+                                            rms_dec_offset))
+
+        print(("The median total offset is {0:4.2f}arcesc "
+               "and the rms of the total offset is "
+               "{1:4.2f} arcsec").format(median_sep,rms_sep))
 
         #also do things based on ObsID
         obsid = np.unique(self.matches['ObsID'])
@@ -183,7 +207,9 @@ class PB(object):
         
 
         return (offset_ra, offset_dec, median_ra_offset, median_dec_offset,
-                obsid, med_ra_offset_obsid, med_dec_offset_obsid)
+                rms_ra_offset, rms_dec_offset,
+                obsid, med_ra_offset_obsid, med_dec_offset_obsid,
+                median_sep,rms_sep)
     
 
     def plot_astrometry(self):
@@ -200,7 +226,7 @@ class PB(object):
         fig_obsid : plt figure instance of obsid behavior
         ax_obsid : ax instance of obsid behavior
         """
-            
+        pass
 
     def oned_plots(self,daterange=False):
         """
