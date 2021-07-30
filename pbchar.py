@@ -182,6 +182,7 @@ class PB(object):
         #fill columns nans and later remove nan elements
 
         comp_table = self.matches
+        comp_table['NVSS_name'] = NVSS_name
         #add columns
         comp_table['med_ap_int_flux'] = np.full(len(comp_table),np.nan)
         comp_table['mean_ap_int_flux'] = np.full(len(comp_table),np.nan)
