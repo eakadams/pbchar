@@ -14,10 +14,13 @@ import argparse
 from multiprocessing import Pool
 import os
 import numpy as np
-from astropy.table import Table
+from astropy.table import Table, vstack
 import matplotlib.pyplot as plt
 from astropy.io import ascii
 import matplotlib
+import astropy.units as u
+from scipy.stats import norm
+import matplotlib.mlab as mlab
 
 #get global level paths
 this_dir,this_filename = os.path.split(__file__)
@@ -95,6 +98,9 @@ if __name__ == '__main__':
     #run in serial per beam
     #weird issues with matplotlib / backend
     #and this is fast
+    #also, want to create a single table for internal comparison
+    #thus appending things
+    tablelist = []
     for bm in range(40):
         #get file
         matchfile = os.path.join(args.path,"{0}_{1:02d}.csv".format(
@@ -104,6 +110,11 @@ if __name__ == '__main__':
                        enddate=args.enddate, SN=args.SN,
                        size = args.size, raterr=args.raterr,
                        mode = args.mode)
+
+        #get internal flux comparison tables
+        comp_table = CB.internal_comp()
+        tablelist.append(comp_table)
+        
         #get plots
         #print(args.plots,type(args.plots))
         if args.plots:
@@ -142,6 +153,10 @@ if __name__ == '__main__':
                    median_dec_offset_50, rms_dec_offset_50,
                    median_total_offset_50, rms_total_offset_50)
 
+    #exit work over beams and collect information
+
+    
+        
     #get a limited table for docs and write that out
     t_docs = t['beam','median_flux_ratio','std_flux_ratio','median_error',
                'median_ra_offset','rms_ra_offset','median_dec_offset',
@@ -290,6 +305,184 @@ if __name__ == '__main__':
     else:
         figpath = os.path.join(figdir,
                                "astrometry_{0}_{1}.pdf".format(
+                                   args.matchfilebase,
+                                   args.output))
+    plt.savefig(figpath)
+    plt.close()
+
+    #create a vstacked comparison table
+    comp_table_all_beams = vstack(tablelist)
+    print(comp_table_all_beams.colnames)
+    print(len(comp_table_all_beams))
+
+    #do filtering if set in command
+    if args.SN is not None:
+        #have I set SN to filter on Apertif and/or NVSS?
+        #let's do both
+        #first nvss
+        nvss_sn = comp_table_all_beams['int_flux_nvss'] / comp_table_all_beams['int_flux_nvss_err']
+        ind_nvss_sn = np.where(nvss_sn >= args.SN)[0]
+        comp_table_all_beams = comp_table_all_beams[ind_nvss_sn]
+        #then apertif, both int and peak
+        ap_int_sn = comp_table_all_beams['int_flux_ap'] / comp_table_all_beams['int_flux_ap_err']
+        ind_ap_int_sn = np.where(ap_int_sn >= args.SN)[0]
+        comp_table_all_beams = comp_table_all_beams[ind_ap_int_sn]
+        ap_peak_sn = comp_table_all_beams['peak_flux_ap'] / comp_table_all_beams['peak_flux_ap_err']
+        ind_ap_peak_sn = np.where(ap_peak_sn >= args.SN)[0]
+        comp_table_all_beams = comp_table_all_beams[ind_ap_peak_sn]
+
+    #and do size filtering. this is clearly set on NVSS size
+    if args.size is not None:
+        ind_size = np.where(comp_table_all_beams['maj_nvss'] <= args.size)[0]
+        comp_table_all_beams = comp_table_all_beams[ind_size]
+
+    #after all filtering check length again
+    print(len(comp_table_all_beams))
+
+    #get normalized flux differences
+    normdiff_int_flux_mean = ( ( comp_table_all_beams['int_flux_ap'] -
+                                 comp_table_all_beams['mean_ap_int_flux'] ) /
+                               comp_table_all_beams['mean_ap_int_flux'] ) 
+    normdiff_peak_flux_mean = ( ( comp_table_all_beams['peak_flux_ap'] -
+                                  comp_table_all_beams['mean_ap_peak_flux'] ) /
+                                comp_table_all_beams['mean_ap_peak_flux'] )
+    
+    #make figures for internal flux comparison
+    #start with integrated; reference the Apertif median
+    #color by number of measurements
+
+    fig, ((ax1, ax2) )= plt.subplots(1,2,figsize=(11,5))
+
+    #get colors based on nvisits
+    #require more than two visits
+    #see a huge dichotomy that has to do with fields with very different
+    #flux scaling. Probably observations where something just went bad
+
+    ind_3 = np.where(comp_table_all_beams['n_visits'] > 2)[0]
+
+    """
+    sc = ax1.scatter(comp_table_all_beams['med_ap_int_flux'][ind_3]*1000.,
+                     (((comp_table_all_beams['int_flux_ap'][ind_3] -
+                        comp_table_all_beams['med_ap_int_flux'][ind_3]) /
+                       comp_table_all_beams['med_ap_int_flux'][ind_3]) ),
+                     marker='.',
+                     c = comp_table_all_beams['n_visits'][ind_3]
+    )
+
+    sc2 = ax2.scatter(comp_table_all_beams['med_ap_peak_flux'][ind_3]*1000.,
+                      (((comp_table_all_beams['peak_flux_ap'][ind_3] -
+                         comp_table_all_beams['med_ap_peak_flux'][ind_3]) /
+                        comp_table_all_beams['med_ap_peak_flux'][ind_3]) ),
+                      marker='.',
+                      c = comp_table_all_beams['n_visits'][ind_3]
+    )
+    """
+    sc3 = ax1.scatter(comp_table_all_beams['mean_ap_int_flux'][ind_3]*1000.,
+                      normdiff_int_flux_mean[ind_3],
+                      marker='.', s=5,
+                      c = comp_table_all_beams['n_visits'][ind_3]
+    )
+
+    sc4 = ax2.scatter(comp_table_all_beams['mean_ap_peak_flux'][ind_3]*1000.,
+                      normdiff_peak_flux_mean[ind_3],
+                      marker='.', s=5,
+                      c = comp_table_all_beams['n_visits'][ind_3]
+    )
+
+    cb = fig.colorbar(sc3)
+
+    """
+    ax1.set_xscale('log')
+    #ax1.set_yscale('log')
+    ax1.set_xlabel('median Apertif integrated flux [mJy]')
+    ax1.set_ylabel('(Individual - median) / median integrated flux')
+
+    ax2.set_xscale('log')
+    ax2.set_xlabel('median Apertif peak flux [mJy]')
+    ax2.set_ylabel('(Individual - median) / median peak flux')
+    """
+    
+    ax1.set_xscale('log')
+    ax1.set_xlabel('mean Apertif integrated flux [mJy]')
+    ax1.set_ylabel('(Individual - mean) / mean integrated flux')
+
+    ax2.set_xscale('log')
+    ax2.set_xlabel('mean Apertif peak flux [mJy]')
+    ax2.set_ylabel('(Individual - mean) / mean peak flux')
+        
+
+    if args.output is None:
+        figpath = os.path.join(figdir,
+                               "internal_flux_comp_{}.pdf".format(args.matchfilebase))
+    else:
+        figpath = os.path.join(figdir,
+                               "internal_flux_comp_{0}_{1}.pdf".format(
+                                   args.matchfilebase,
+                                   args.output))
+    plt.savefig(figpath)
+    plt.close()
+
+
+    #add a histogram of normalized flux accuracies
+
+    fig, ((ax1, ax2) )= plt.subplots(1,2,figsize=(10,5))#,
+                                     #sharex=True, sharey=True)
+
+    n_bins = 50
+
+    ax1.hist(normdiff_int_flux_mean[ind_3],
+             bins = np.arange(-1.5,1.55,0.05),
+             histtype='step')
+    ax1.set_xlabel('(individual - mean) / mean integrated flux')
+    
+
+    ax1.set_yscale('log')
+    ax1.set_ylabel('Counts')
+    #ax1.set_ylim(5e-4,10)
+
+    med_normdiff_int = np.nanmedian(normdiff_int_flux_mean[ind_3])
+    #and get one sigma range
+    nd_int_16 = np.nanpercentile(normdiff_int_flux_mean[ind_3],16)
+    nd_int_84 = np.nanpercentile(normdiff_int_flux_mean[ind_3],84)
+
+    ylim = ax1.get_ylim()
+    ax1.plot([med_normdiff_int,med_normdiff_int],ylim,
+             label = ('Normalized integrated flux; '
+                      'Median = {0:4.2f} '
+                      "(+{1:4.2f} - {2:4.2f})").format(med_normdiff_int,
+                                                       nd_int_16,
+                                                       nd_int_84) )
+    ax1.legend()
+    
+    #(mu_int, sigma_int) = norm.fit(normdiff_int_flux_mean[ind_3])
+
+    #print(mu_int, sigma_int)
+
+    #y = mlab.normpdf( bins, mu_int, sigma_int)
+    #l = ax1.plot(bins, y)
+    
+    ax2.hist( normdiff_peak_flux_mean[ind_3],
+              bins = n_bins, density = True
+              )
+
+    (mu_peak, sigma_peak) = norm.fit(normdiff_peak_flux_mean[ind_3])
+
+    print(mu_peak, sigma_peak)
+
+    #y = mlab.normpdf( bins, mu_peak, sigma_peak)
+    #l = ax2.plot(bins, y)
+    ax2.set_xlabel('(individual - mean) / mean peak flux')
+    
+
+    ax2.set_yscale('log')
+    ax2.set_ylim(5e-4,10)
+    
+    if args.output is None:
+        figpath = os.path.join(figdir,
+                               "internal_flux_comp_hist_{}.pdf".format(args.matchfilebase))
+    else:
+        figpath = os.path.join(figdir,
+                               "internal_flux_comp_hist_{0}_{1}.pdf".format(
                                    args.matchfilebase,
                                    args.output))
     plt.savefig(figpath)
