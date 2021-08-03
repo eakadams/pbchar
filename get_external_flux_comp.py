@@ -103,6 +103,13 @@ if __name__ == '__main__':
     ind_peak_norm = np.where(peak_sn_norm > 10)[0]
     norm_all = norm_all[ind_peak_norm]
 
+    #also only keep if NVSS majoraxis < 45"
+    ind_size_orig = np.where(orig_all['maj_nvss'] < 45)[0]
+    ind_size_norm = np.where(norm_all['maj_nvss'] < 45)[0]
+
+    norm_all = norm_all[ind_size_norm]
+    orig_all = orig_all[ind_size_orig]
+
     print(len(orig_all),len(norm_all))
 
     #get nvss flux ratios
@@ -113,94 +120,62 @@ if __name__ == '__main__':
     peak_ratio_norm = norm_all['peak_flux_ap'] / norm_all['int_flux_nvss']
 
     print(orig_all.colnames)
+
+   
     #get flux ratios at >=50% of pb response
     ind_orig_50 = np.where(orig_all['pb_level'] >= 0.5)[0]
     ind_norm_50 = np.where(norm_all['pb_level'] >= 0.5)[0]
 
     int_ratio_orig_50 = int_ratio_orig[ind_orig_50]
-    peak_ratio_orig_50 = peak_ratio_orig[ind_orig_50]
-
     int_ratio_norm_50 = int_ratio_norm[ind_norm_50]
+    peak_ratio_orig_50 = peak_ratio_orig[ind_orig_50]
     peak_ratio_norm_50 = peak_ratio_norm[ind_norm_50]
 
+
+    print(len(int_ratio_norm),len(int_ratio_norm_50),len(peak_ratio_norm),
+          len(peak_ratio_norm_50))
+    
     #make histogram of flux ratios
 
     fig, ((ax1, ax2) )= plt.subplots(1,2,figsize=(10,5) )
 
+    histbins = np.arange(0.3,1.95,0.05)
+
+    
     #get stats for labels
     stats_peak_orig = get_stats(peak_ratio_orig)
     stats_int_orig = get_stats(int_ratio_orig)
     stats_peak_orig_50 = get_stats(peak_ratio_orig_50)
     stats_int_orig_50 = get_stats(int_ratio_orig_50)
 
-    labels_orig = [ ('Peak flux; mean = {0:4.2f} '
-                     '(+{1:4.2f} -{2:4.2f})').format(stats_peak_orig[1],
-                                                     stats_peak_orig[2],
-                                                     stats_peak_orig[3]),
-                    ('Int flux; mean = {0:4.2f} '
-                     '(+{1:4.2f} -{2:4.2f})').format(stats_int_orig[1],
-                                                     stats_int_orig[2],
-                                                     stats_int_orig[3]),
-                    ('Peak flux (>50% PB); mean = {0:4.2f} '
-                     '(+{1:4.2f} -{2:4.2f})').format(stats_peak_orig_50[1],
-                                                     stats_peak_orig_50[2],
-                                                     stats_peak_orig_50[3]),
-                    ('Int flux (>50% PB); mean = {0:4.2f} '
-                     '(+{1:4.2f} -{2:4.2f})').format(stats_int_orig_50[1],
-                                                     stats_int_orig_50[2],
-                                                     stats_int_orig_50[3])
-    ]
 
-    histbins = np.arange(0.3,1.95,0.05)
     
     ax1.hist(int_ratio_orig, bins=histbins,
              histtype='step', color=colors[0],
              linestyle='solid',
-             label = ('Int flux; mean = {0:4.2f} '
-                     '(+{1:4.2f} - '
-                      '{2:4.2f})').format(stats_int_orig[1],
-                                          (stats_int_orig[3]-
-                                           stats_int_orig[1]),
-                                          (stats_int_orig[1] -
-                                           stats_int_orig[2]))
+             label = ('Integrated flux ratio')
              )
     
     ax1.hist(int_ratio_orig_50, bins=histbins,
              histtype='step', color=colors[0],
              linestyle='dashed',
-             label = ('Int flux (>50% PB); mean = {0:4.2f} '
-                     '(+{1:4.2f} - '
-                      '{2:4.2f})').format(stats_int_orig_50[1],
-                                          (stats_int_orig_50[3]-
-                                           stats_int_orig_50[1]),
-                                          (stats_int_orig_50[1] -
-                                           stats_int_orig_50[2]))
-             )
+             label = ('Integrated flux ratio (>50% PB)')
+    )
+
+    
     
     ax1.hist(peak_ratio_orig, bins=histbins,
-              histtype='step', color=colors[1],
+             histtype='step', color=colors[1],
              linestyle='solid',
-             label = ('Peak flux; mean = {0:4.2f} '
-                     '(+{1:4.2f} - '
-                      '{2:4.2f})').format(stats_peak_orig[1],
-                                          (stats_peak_orig[3]-
-                                           stats_peak_orig[1]),
-                                          (stats_peak_orig[1] -
-                                           stats_peak_orig[2]))
-             )
+             label = ('Peak flux ratio')
+    )
     
 
     
     ax1.hist(peak_ratio_orig_50, bins=histbins,
              histtype='step', color=colors[1],
              linestyle='dashed',
-             label = ('Peak flux (>50% PB); mean = {0:4.2f} '
-                     '(+{1:4.2f} - '
-                      '{2:4.2f})').format(stats_peak_orig_50[1],
-                                          (stats_peak_orig_50[3]-
-                                           stats_peak_orig_50[1]),
-                                          (stats_peak_orig_50[1] -
-                                           stats_peak_orig_50[2]))
+             label = ('Peak flux ratio (>50% PB)')
              )
 
     ax1.set_xlabel('Apertif / NVSS integrated flux ratio, Original GPR')
@@ -213,23 +188,126 @@ if __name__ == '__main__':
 
     ax1.legend()
 
-    #med_peak_ratio = np.nanmedian(peak_ratio)
-    #mean_peak_ratio = np.nanmedian(peak_ratio)
-    #nd_int_16 = np.nanpercentile(peak_ratio,16)
-    #nd_int_84 = np.nanpercentile(peak_ratio,84)
 
-    #ylim = ax1.get_ylim()
-    #ax1.plot([med_peak_ratio,med_peak_ratio],ylim,
-    #         label = ('Peak flux ratio; '
-    #                  'Median = {0:4.2f} '
-    #                  "(+{1:4.2f} - {2:4.2f})").format(med_peak_ratio,
-    #                                                   nd_int_16,
-    #                                                   nd_int_84) )
-    #ax1.legend()
+    print('For original GPR beams:')
+
+    print(('Mean integrated flux ratio is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_int_orig[1],
+               (stats_int_orig[3] - stats_int_orig[1]),
+               (stats_int_orig[1] - stats_int_orig[2]) ) )
+    
+    print(('Mean integrated flux ratio (>50%) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_int_orig_50[1],
+               (stats_int_orig_50[3] - stats_int_orig_50[1]),
+               (stats_int_orig_50[1] - stats_int_orig_50[2]) ) )
+
+    print(('Mean peak flux ratio is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_peak_orig[1],
+               (stats_peak_orig[3] - stats_peak_orig[1]),
+               (stats_peak_orig[1] - stats_peak_orig[2]) ) )
+    
+    print(('Mean peak flux ratio (>50%) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_peak_orig_50[1],
+               (stats_peak_orig_50[3] - stats_peak_orig_50[1]),
+               (stats_peak_orig_50[1] - stats_peak_orig_50[2]) ) )
+    
+  
+
+    #now repeat for normalized beams, ax2
+
+    #get stats for labels
+    stats_peak_norm = get_stats(peak_ratio_norm)
+    stats_int_norm = get_stats(int_ratio_norm)
+    stats_peak_norm_50 = get_stats(peak_ratio_norm_50)
+    stats_int_norm_50 = get_stats(int_ratio_norm_50)
 
 
+    
+    ax2.hist(int_ratio_norm, bins=histbins,
+             histtype='step', color=colors[0],
+             linestyle='solid',
+             label = ('Integrated flux ratio')
+             )
+    
+    ax2.hist(int_ratio_norm_50, bins=histbins,
+             histtype='step', color=colors[0],
+             linestyle='dashed',
+             label = ('Integrated flux ratio (>50% PB)')
+    )
+
+    
+    
+    ax2.hist(peak_ratio_norm, bins=histbins,
+             histtype='step', color=colors[1],
+             linestyle='solid',
+             label = ('Peak flux ratio')
+    )
+    
+
+    
+    ax2.hist(peak_ratio_norm_50, bins=histbins,
+             histtype='step', color=colors[1],
+             linestyle='dashed',
+             label = ('Peak flux ratio (>50% PB)')
+             )
+
+    ax2.set_xlabel('Apertif / NVSS integrated flux ratio, Normalized GPR')
+    
+
+    ax2.set_yscale('log')
+    ax2.set_ylabel('Counts')
+
+    ax2.set_ylim([0.5,5000])
+
+    ax2.legend()
+
+
+    print('For normalized GPR beams:')
+
+    print(('Mean integrated flux ratio is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_int_norm[1],
+               (stats_int_norm[3] - stats_int_norm[1]),
+               (stats_int_norm[1] - stats_int_norm[2]) ) )
+    
+    print(('Mean integrated flux ratio (>50%) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_int_norm_50[1],
+               (stats_int_norm_50[3] - stats_int_norm_50[1]),
+               (stats_int_norm_50[1] - stats_int_norm_50[2]) ) )
+
+    print(('Mean peak flux ratio is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_peak_norm[1],
+               (stats_peak_norm[3] - stats_peak_norm[1]),
+               (stats_peak_norm[1] - stats_peak_norm[2]) ) )
+    
+    print(('Mean peak flux ratio (>50%) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_peak_norm_50[1],
+               (stats_peak_norm_50[3] - stats_peak_norm_50[1]),
+               (stats_peak_norm_50[1] - stats_peak_norm_50[2]) ) )
+    
     
     figpath = os.path.join(figdir,"external_flux_comp_hist.pdf")
 
     plt.savefig(figpath)
     plt.close()
+
+    #get a table that has relevant  information to put in paper
+    #what I want is global line, plus per beam
+    #columns are I want are: mean, per16, per84 for int/peak for orig/norm
+    #and at two diff levels
+    N=41
+    dtype = [('beam','i4'),('mean_pr_orig','f8'),
+             ('per16_pr_orig','f8'),('per84_pr_orig','f8'),
+             ('median_flux_ratio','f8'),('std_flux_ratio','f8'),
+             ('mean_error','f8'),('median_error','f8'),
+             ('median_ra_offset','f8'),('rms_ra_offset','f8'),
+             ('median_dec_offset','f8'),('rms_dec_offset','f8'),
+             ('median_total_offset','f8'),('rms_total_offset','f8')]
+    
