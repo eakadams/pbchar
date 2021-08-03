@@ -20,6 +20,8 @@ import os
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 import matplotlib.mlab as mlab
+from astropy.coordinates import SkyCoord
+from astropy import units as u
 
 
 #define global directories
@@ -107,7 +109,6 @@ class PB(object):
         else:
             self.matches_date_range = limit_matches
 
-
     def go(self):
         """
         Run all available analysis plots:
@@ -126,6 +127,194 @@ class PB(object):
         if self.matches_date_range is not None:
             self.position_plots(daterange=True)
             self.oned_plots(daterange=True)
+
+    def internal_comp(self):
+        """
+        Does internal flux comparison using MDS fields
+
+        Parameters
+        ----------
+        self : PB object
+
+        Returns
+        -------
+        ????
+        """
+        #get NVSS name
+        #to find unique NVSS sources
+        #can't run unique on NVSS coords directly
+        NVSS_name = np.empty(len(self.matches),dtype=object)
+        for i in range(len(self.matches)):
+            NVSS_name[i] = 'NVSS{0}+{1}'.format(self.matches['ra_nvss'][i],
+                                                self.matches['dec_nvss'][i])
+        #get unique NVSS sources / number of occurences
+        unique_NVSS, n_counts = np.unique(NVSS_name, return_counts = True)
+
+        #find (indices of) repeated sources
+        ind_repeat = np.where(n_counts > 1)[0]
+        repeated_NVSS = unique_NVSS[ind_repeat]
+        
+        #(iterate through repeated sources to) get "global" comparison values
+        n_visits = n_counts[ind_repeat]
+        median_apertif_int_flux = np.empty(len(ind_repeat))
+        mean_apertif_int_flux = np.empty(len(ind_repeat))
+        rms_apertif_int_flux = np.empty(len(ind_repeat))
+        median_apertif_peak_flux = np.empty(len(ind_repeat))
+        mean_apertif_peak_flux = np.empty(len(ind_repeat))
+        rms_apertif_peak_flux = np.empty(len(ind_repeat))
+        for i,source in enumerate(repeated_NVSS):
+            ind_aper = np.where(NVSS_name == source)[0]
+            median_apertif_int_flux[i] = np.median(
+                self.matches['int_flux_ap'][ind_aper])
+            mean_apertif_int_flux[i] = np.mean(
+                self.matches['int_flux_ap'][ind_aper])
+            rms_apertif_int_flux[i] = np.sqrt(np.mean(
+                self.matches['int_flux_ap'][ind_aper]**2))
+            median_apertif_peak_flux[i] = np.median(
+                self.matches['peak_flux_ap'][ind_aper])
+            mean_apertif_peak_flux[i] = np.mean(
+                self.matches['peak_flux_ap'][ind_aper])
+            rms_apertif_peak_flux[i] = np.sqrt(np.mean(
+                self.matches['peak_flux_ap'][ind_aper]**2))
+
+        #now get table of sources with individual apertif measurements
+        #create a new table with added columns
+        #fill columns nans and later remove nan elements
+
+        comp_table = self.matches
+        comp_table['NVSS_name'] = NVSS_name
+        #add columns
+        comp_table['med_ap_int_flux'] = np.full(len(comp_table),np.nan)
+        comp_table['mean_ap_int_flux'] = np.full(len(comp_table),np.nan)
+        comp_table['rms_ap_int_flux'] = np.full(len(comp_table),np.nan)
+        comp_table['med_ap_peak_flux'] = np.full(len(comp_table),np.nan)
+        comp_table['mean_ap_peak_flux'] = np.full(len(comp_table),np.nan)
+        comp_table['rms_ap_peak_flux'] = np.full(len(comp_table),np.nan)
+        comp_table['n_visits'] = np.full(len(comp_table),1)
+        
+        #iterate through and fill columns where there are multiple obs
+        for i,entry in enumerate(NVSS_name):
+            ind_nvss = np.where(entry == repeated_NVSS)[0]
+            if len(ind_nvss) > 0:
+                #entry is in repeated NVSS list
+                comp_table['med_ap_int_flux'][i] = median_apertif_int_flux[ind_nvss]
+                comp_table['mean_ap_int_flux'][i] = mean_apertif_int_flux[ind_nvss]
+                comp_table['rms_ap_int_flux'][i] = rms_apertif_int_flux[ind_nvss]
+                comp_table['med_ap_peak_flux'][i] = median_apertif_peak_flux[ind_nvss]
+                comp_table['mean_ap_peak_flux'][i] = mean_apertif_peak_flux[ind_nvss]
+                comp_table['rms_ap_peak_flux'][i] = rms_apertif_peak_flux[ind_nvss]
+                #also get number of visits
+                comp_table['n_visits'][i] = n_visits[ind_nvss]
+                
+        #only keep table entries w/out NaNs
+        ind_repeats = np.where(comp_table['n_visits'] > 1)[0]
+        comp_table = comp_table[ind_repeats]
+            
+        #return unique_NVSS, n_counts
+        return comp_table
+
+        
+        
+
+    def get_astrometry(self):
+        """Gets astrometry for a PB object
+
+        Parameters
+        ----------
+        self : PB object
+        
+        Returns
+        -------
+        offset_ra : Numpy array of Angles (astropy.coordinates.angles.Angle)
+            The offset in RA to go from Apertif to NVSS coord for all matches
+        offset_dec : Numpy array of Angle
+            The offset in Dec to go from Apertif to NVSS coord for all matches
+        median_ra_offset : float
+            The median RA offset in arcsec over all observations included in PB object
+        median_dec_offset : float
+            The median Dec offset in arcsec over all observations in PB object
+        rms_ra_offset : float
+            RMS of RA offset
+        rms_dec_offset : float
+            RMS of Dec offset
+        obsid : numpy array
+            All Observation IDs in PB object
+        med_ra_offset_obsid : Numpy array of Angles
+            Median RA offset for each ObsID in obsid 
+        med_dec_offset_obsid : Numpy array of Angles
+            Median Dec offset for each ObsID in obsid 
+        """
+
+        #Load RA,Dec into skycoord objects
+        coords_nvss = SkyCoord(self.matches['ra_nvss'],self.matches['dec_nvss'],
+                               unit='deg')
+        coords_apertif  = SkyCoord(self.matches['ra_apertif'],
+                                   self.matches['dec_apertif'], unit='deg')
+
+        #get spherical coord offsets to go from Apertif to NVSS
+        offset_ra, offset_dec = coords_apertif.spherical_offsets_to(coords_nvss)
+
+        #calculate median ra, dec offset
+        #put in arcsec
+        median_ra_offset = np.median(offset_ra).arcsec
+        median_dec_offset = np.median(offset_dec).arcsec
+
+        #also get std and report that
+        rms_ra_offset = np.sqrt(np.mean(offset_ra.arcsec**2))
+        rms_dec_offset = np.sqrt(np.mean(offset_dec.arcsec**2))
+
+        #also look at total offset
+        separation = coords_apertif.separation(coords_nvss)
+        median_sep = np.median(separation.arcsec)
+        rms_sep = np.sqrt(np.mean(separation.arcsec**2))
+        #rms_offset = np.sqrt(np.mean(offset
+        
+        print(("To go from Apertif to NVSS, "
+               "the median offset in RA is {0:4.2f} "
+               "({2:4.2f}) arcsec. "
+               "The median offset in Dec is {1:4.2f} "
+               "({3:4.2f}) arcsec ").format(median_ra_offset,
+                                            median_dec_offset,
+                                            rms_ra_offset,
+                                            rms_dec_offset))
+
+        print(("The median total offset is {0:4.2f}arcesc "
+               "and the rms of the total offset is "
+               "{1:4.2f} arcsec").format(median_sep,rms_sep))
+
+        #also do things based on ObsID
+        obsid = np.unique(self.matches['ObsID'])
+        med_ra_offset_obsid = np.empty(len(obsid),dtype=object)
+        med_dec_offset_obsid = np.empty(len(obsid),dtype=object)
+        for i,obs in enumerate(obsid):
+            source_ind = np.where(self.matches['ObsID'] == obs)[0]
+            offset_ra_obsid = offset_ra[source_ind]
+            offset_dec_obsid = offset_dec[source_ind]
+            med_ra_offset_obsid[i] = np.median(offset_ra_obsid)
+            med_dec_offset_obsid[i] = np.median(offset_dec_obsid)
+        
+
+        return (offset_ra, offset_dec, median_ra_offset, median_dec_offset,
+                rms_ra_offset, rms_dec_offset,
+                obsid, med_ra_offset_obsid, med_dec_offset_obsid,
+                median_sep,rms_sep)
+    
+
+    def plot_astrometry(self):
+        """Makes plot of astrometry
+
+        Parameters
+        ----------
+        self : PB object
+
+        Returns
+        -------
+        fig2d : plt figure instance of 2D astrometry plot
+        ax2d : ax instance of 2D astrometry plot
+        fig_obsid : plt figure instance of obsid behavior
+        ax_obsid : ax instance of obsid behavior
+        """
+        pass
 
     def oned_plots(self,daterange=False):
         """
