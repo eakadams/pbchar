@@ -178,8 +178,7 @@ if __name__ == '__main__':
              )
     
     ax1.hist(peak_ratio_orig, bins=histbins,
-              histtype='step', color=colors[1ax1.hist(peak_ratio_orig, bins=histbins,
-             histtype='step', color=colors[1],
+              histtype='step', color=colors[1],
              linestyle='solid',
              label = ('Peak flux; mean = {0:4.2f} '
                      '(+{1:4.2f} - '
