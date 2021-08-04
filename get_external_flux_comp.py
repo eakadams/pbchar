@@ -291,6 +291,10 @@ if __name__ == '__main__':
                stats_peak_norm_50[1],
                (stats_peak_norm_50[3] - stats_peak_norm_50[1]),
                (stats_peak_norm_50[1] - stats_peak_norm_50[2]) ) )
+
+    print(('Standard deviation of '
+           'integrated flux ratio is '
+           '{0:4.2f}').format(np.std(int_ratio_norm)))
     
     
     figpath = os.path.join(figdir,"external_flux_comp_hist.pdf")
