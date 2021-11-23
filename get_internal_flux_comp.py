@@ -95,7 +95,7 @@ if __name__ == '__main__':
     #get normalized flux differences
     normdiff_int_flux_mean = ( ( comp_table_all_beams['int_flux_ap'] -
                                  comp_table_all_beams['mean_ap_int_flux'] ) /
-                               comp_table_all_beams['mean_ap_int_flux'] ) 
+                               comp_table_all_beams['mean_ap_int_flux'] )
     normdiff_peak_flux_mean = ( ( comp_table_all_beams['peak_flux_ap'] -
                                   comp_table_all_beams['mean_ap_peak_flux'] ) /
                                 comp_table_all_beams['mean_ap_peak_flux'] )
@@ -110,6 +110,8 @@ if __name__ == '__main__':
     ind_50 = np.where(comp_table_all_beams['pb_level'] >= 0.5)[0]
     normdiff_int_50 = normdiff_int_flux_mean[ind_50]
     normdiff_peak_50 = normdiff_peak_flux_mean[ind_50]
+    int_ratio_50 = int_ratio[ind_50]
+    peak_ratio_50 = int_ratio[ind_50]
     
     #make figures for internal flux comparison
     #just do a histogram
@@ -120,27 +122,27 @@ if __name__ == '__main__':
 
     histbins = np.arange(-1.5,1.55,0.05)
 
-    ax1.hist(normdiff_int_flux_mean,
+    ax1.hist(int_ratio,
              bins = histbins,
              color=colors[0],
              histtype='step',
              label = 'Integrated flux')
-    ax1.hist(normdiff_int_50, bins=histbins,
+    ax1.hist(int_ratio_50, bins=histbins,
              histtype='step',color=colors[0],
              linestyle='dashed',
              label = 'Integrated flux (>50% PB)')
     
-    ax1.hist(normdiff_peak_flux_mean,
+    ax1.hist(peak_ratio,
              bins = histbins,
              color=colors[1],
              histtype='step',
              label = 'Peak flux')
-    ax1.hist(normdiff_peak_50, bins=histbins,
+    ax1.hist(peak_ratio_50, bins=histbins,
              histtype='step',color=colors[1],
              linestyle='dashed',
              label = 'Peak flux (>50% PB)')
 
-    ax1.set_xlabel('Mean-normalized flux difference')
+    ax1.set_xlabel('Flux ratio (to mean)')
     
 
     ax1.set_yscale('log')
@@ -156,36 +158,34 @@ if __name__ == '__main__':
 
     stats_peak_ratio = get_stats(peak_ratio)
     stats_int_ratio = get_stats(int_ratio)
+    stats_peak_ratio_50 = get_stats(peak_ratio_50)
+    stats_int_ratio_50 = get_stats(int_ratio_50)
 
-    print(('Mean normalized integrated flux difference is: '
-           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
-               stats_int[1],
-               (stats_int[3] - stats_int[1]),
-               (stats_int[1] - stats_int[2]) ) )
-    
-    print(('Mean normalized integrated flux difference (>50%) is: '
-           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
-               stats_int_50[1],
-               (stats_int_50[3] - stats_int_50[1]),
-               (stats_int_50[1] - stats_int_50[2]) ) )
-    
-    print(('Mean normalized peak flux difference is: '
-           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
-               stats_peak[1],
-               (stats_peak[3] - stats_peak[1]),
-               (stats_peak[1] - stats_peak[2]) ) )
-    
-    print(('Mean normalized peak flux difference (>50%) is: '
-           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
-               stats_peak_50[1],
-               (stats_peak_50[3] - stats_peak_50[1]),
-               (stats_peak_50[1] - stats_peak_50[2]) ) )
-
-    print(('Mean int flux ratio is: '
+    print(('Integrated flux ratio (to the mean) is: '
            "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
                stats_int_ratio[1],
                (stats_int_ratio[3] - stats_int_ratio[1]),
                (stats_int_ratio[1] - stats_int_ratio[2]) ) )
+    
+    print(('Integrated flux ratio (>50%) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_int_ratio_50[1],
+               (stats_int_ratio_50[3] - stats_int_ratio_50[1]),
+               (stats_int_ratio_50[1] - stats_int_ratio_50[2]) ) )
+    
+    print(('Peak flux ratio (to the mean) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_peak_ratio[1],
+               (stats_peak_ratio[3] - stats_peak_ratio[1]),
+               (stats_peak_ratio[1] - stats_peak_ratio[2]) ) )
+    
+    print(('Peak flux ratio (>50%) is: '
+           "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
+               stats_peak_ratio_50[1],
+               (stats_peak_ratio_50[3] - stats_peak_ratio_50[1]),
+               (stats_peak_ratio_50[1] - stats_peak_ratio_50[2]) ) )
+
+
 
     figpath = os.path.join(figdir,"internal_flux_comp_hist.pdf")
     plt.savefig(figpath)

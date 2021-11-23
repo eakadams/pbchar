@@ -302,16 +302,4 @@ if __name__ == '__main__':
     plt.savefig(figpath)
     plt.close()
 
-    #get a table that has relevant  information to put in paper
-    #what I want is global line, plus per beam
-    #columns are I want are: mean, per16, per84 for int/peak for orig/norm
-    #and at two diff levels
-    N=41
-    dtype = [('beam','i4'),('mean_pr_orig','f8'),
-             ('per16_pr_orig','f8'),('per84_pr_orig','f8'),
-             ('median_flux_ratio','f8'),('std_flux_ratio','f8'),
-             ('mean_error','f8'),('median_error','f8'),
-             ('median_ra_offset','f8'),('rms_ra_offset','f8'),
-             ('median_dec_offset','f8'),('rms_dec_offset','f8'),
-             ('median_total_offset','f8'),('rms_total_offset','f8')]
     
