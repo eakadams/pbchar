@@ -190,3 +190,45 @@ if __name__ == '__main__':
     figpath = os.path.join(figdir,"internal_flux_comp_hist.pdf")
     plt.savefig(figpath)
     plt.close()
+
+
+    #make a scatter / histogram plot
+    #define scatter and hist axes
+    rect_scatter = [0.1, 0.1, 0.65, 0.85]
+    rect_histy = [0.755, 0.1, 0.2, 0.85]
+
+    #setup figure
+    fig = plt.figure(figsize = (8,8))
+    ax_scatter = plt.axes(rect_scatter)
+    ax_histy = plt.axes(rect_histy)
+    ax_histy.tick_params(labelleft=False)
+
+    #do the scatter plot
+    ax_scatter.scatter(comp_table_all_beams['mean_ap_int_flux']*1000.,
+                       int_ratio,
+                       color = 'gray', marker='.')
+    ax_scatter.scatter(comp_table_all_beams['mean_ap_int_flux'][ind_50]*1000.,
+                       int_ratio[ind_50],
+                       color = 'black', marker = '.')
+    ax_scatter.set_xlabel("Mean integrated flux density (mJy)")
+    ax_scatter.set_ylabel("Apertif / mean Apertif integrated flux density")
+    ax_scatter.set_xscale('log')
+    ax_scatter.set_xlim(4,700)
+    ax_scatter.set_ylim(0.4,2.0)
+
+    #and the histogram
+    #get y limits for setting bins
+    ylims = ax_scatter.get_ylim()
+    bw = 0.025
+    bins = np.arange(ylims[0],ylims[1]+bw, bw)
+    ax_histy.hist(int_ratio, bins = bins, orientation = 'horizontal',
+                  color = 'gray')
+    ax_histy.hist(int_ratio[ind_50], bins = bins,
+                  orientation = 'horizontal',
+                  color = 'black')
+    
+
+    #save teh figure
+    figpath = os.path.join(figdir,"internal_flux_scatter_hist.pdf")
+    plt.savefig(figpath)
+    plt.close()

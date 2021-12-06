@@ -311,6 +311,7 @@ if __name__ == '__main__':
     fig = plt.figure(figsize = (8,8))
     ax_scatter = plt.axes(rect_scatter)
     ax_histy = plt.axes(rect_histy)
+    ax_histy.tick_params(labelleft=False)
 
     #do the scatter plot
     ax_scatter.scatter(orig_all['int_flux_ap']*1000.,int_ratio_orig,
@@ -322,13 +323,13 @@ if __name__ == '__main__':
     ax_scatter.set_ylabel("Apertif / NVSS integrated flux density")
     ax_scatter.set_xscale('log')
     ax_scatter.set_xlim(4,700)
+    ax_scatter.set_ylim(0.4,2.0)
 
     #and the histogram
     #get y limits for setting bins
     ylims = ax_scatter.get_ylim()
-    bw = 0.05
+    bw = 0.025
     bins = np.arange(ylims[0],ylims[1]+bw, bw)
-    print(bins)
     ax_histy.hist(int_ratio_orig, bins = bins, orientation = 'horizontal',
                   color = 'gray')
     ax_histy.hist(int_ratio_orig[ind_orig_50], bins = bins,
