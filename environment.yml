@@ -1,0 +1,17 @@
+name: pbchar
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.6
+ #  - pip>=20
+  - numpy
+  - matplotlib
+  - jupyterlab
+  - astropy
+  - scipy
+  - pip:
+    - tol-colors
+    - importlib_resources
+
+
