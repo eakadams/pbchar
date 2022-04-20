@@ -22,7 +22,7 @@ import astropy.units as u
 from scipy.stats import norm
 import matplotlib.mlab as mlab
 
-#get global level paths
+# get global level paths
 this_dir,this_filename = os.path.split(__file__)
 pbchardir = this_dir
 filedir = os.path.join(pbchardir,"files")
@@ -106,12 +106,20 @@ if __name__ == '__main__':
     peak_ratio = ( comp_table_all_beams['peak_flux_ap'] /
                   comp_table_all_beams['mean_ap_peak_flux'] )
 
+    #also get relative error
+    int_err_rel = ( comp_table_all_beams['int_flux_ap_err'] /
+                    comp_table_all_beams['int_flux_ap'] )
+    peak_err_rel = ( comp_table_all_beams['peak_flux_ap_err'] /
+                     comp_table_all_beams['peak_flux_ap'] )
+
     #get diffs w/in 50% pb response
     ind_50 = np.where(comp_table_all_beams['pb_level'] >= 0.5)[0]
     normdiff_int_50 = normdiff_int_flux_mean[ind_50]
     normdiff_peak_50 = normdiff_peak_flux_mean[ind_50]
     int_ratio_50 = int_ratio[ind_50]
     peak_ratio_50 = int_ratio[ind_50]
+    int_err_rel_50 = int_err_rel[ind_50]
+    peak_err_rel_50 = peak_err_rel[ind_50]
     
     #make figures for internal flux comparison
     #just do a histogram
@@ -161,6 +169,12 @@ if __name__ == '__main__':
     stats_peak_ratio_50 = get_stats(peak_ratio_50)
     stats_int_ratio_50 = get_stats(int_ratio_50)
 
+    stats_int_err_rel = get_stats(int_err_rel)
+    stats_int_err_rel_50 = get_stats(int_err_rel_50)
+    stats_peak_err_rel = get_stats(peak_err_rel)
+    stats_peak_err_rel_50 = get_stats(peak_err_rel_50)
+    
+
     print(('Integrated flux ratio (to the mean) is: '
            "{0:4.2f} (+{1:4.2f} - {2:4.2f})").format(
                stats_int_ratio[1],
@@ -185,6 +199,30 @@ if __name__ == '__main__':
                (stats_peak_ratio_50[3] - stats_peak_ratio_50[1]),
                (stats_peak_ratio_50[1] - stats_peak_ratio_50[2]) ) )
 
+    print(('Relative int flux error is: '
+           "{0:5.3f} (+{1:5.3f} - {2:5.3f})").format(
+               stats_int_err_rel[1],
+               (stats_int_err_rel[3] - stats_int_err_rel[1]),
+               (stats_int_err_rel[1] - stats_int_err_rel[2]) ) )
+
+    print(('Relative int flux error (>50%) is: '
+           "{0:5.3f} (+{1:5.3f} - {2:5.3f})").format(
+               stats_int_err_rel_50[1],
+               (stats_int_err_rel_50[3] - stats_int_err_rel_50[1]),
+               (stats_int_err_rel_50[1] - stats_int_err_rel_50[2]) ) )
+
+    print(('Relative peak flux error is: '
+           "{0:5.3f} (+{1:5.3f} - {2:5.3f})").format(
+               stats_peak_err_rel[1],
+               (stats_peak_err_rel[3] - stats_peak_err_rel[1]),
+               (stats_peak_err_rel[1] - stats_peak_err_rel[2]) ) )
+
+    print(('Relative peak flux error (>50%) is: '
+           "{0:5.3f} (+{1:5.3f} - {2:5.3f})").format(
+               stats_peak_err_rel_50[1],
+               (stats_peak_err_rel_50[3] - stats_peak_err_rel_50[1]),
+               (stats_peak_err_rel_50[1] - stats_peak_err_rel_50[2]) ) )
+
 
 
     figpath = os.path.join(figdir,"internal_flux_comp_hist.pdf")
@@ -201,7 +239,7 @@ if __name__ == '__main__':
     fig = plt.figure(figsize = (8,8))
     ax_scatter = plt.axes(rect_scatter)
     ax_histy = plt.axes(rect_histy)
-    ax_histy.tick_params(labelleft=False)
+    ax_histy.tick_params(labelleft=False, labelsize=12)
 
     #do the scatter plot
     ax_scatter.scatter(comp_table_all_beams['mean_ap_int_flux']*1000.,
@@ -210,11 +248,12 @@ if __name__ == '__main__':
     ax_scatter.scatter(comp_table_all_beams['mean_ap_int_flux'][ind_50]*1000.,
                        int_ratio[ind_50],
                        color = 'black', marker = '.')
-    ax_scatter.set_xlabel("Mean integrated flux density (mJy)")
-    ax_scatter.set_ylabel("Apertif / mean Apertif integrated flux density")
+    ax_scatter.set_xlabel("Mean integrated flux density (mJy)", size=15)
+    ax_scatter.set_ylabel("Apertif / mean Apertif integrated flux density",size=15)
     ax_scatter.set_xscale('log')
     ax_scatter.set_xlim(4,700)
     ax_scatter.set_ylim(0.4,2.0)
+    ax_scatter.tick_params(axis='both', which='major', labelsize=12)
 
     #and the histogram
     #get y limits for setting bins
